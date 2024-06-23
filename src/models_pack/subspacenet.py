@@ -11,6 +11,7 @@ from src.utils import *
 from src.methods_pack.music import MUSIC
 from src.methods_pack.esprit import ESPRIT, esprit
 from src.methods_pack.root_music import RootMusic, root_music
+from src.sensors_arrays import SensorsArray
 
 
 class SubspaceNet(nn.Module):
@@ -41,7 +42,7 @@ class SubspaceNet(nn.Module):
 
     """
 
-    def __init__(self, tau: int, diff_method: str = "root_music",
+    def __init__(self, sensors_array: SensorsArray, tau: int, diff_method: str = "root_music",
                  system_model: SystemModel = None, field_type: str = "Far"):
         """Initializes the SubspaceNet model.
 
@@ -66,6 +67,8 @@ class SubspaceNet(nn.Module):
         self.deconv4 = nn.ConvTranspose2d(32, 1, kernel_size=2)
         self.DropOut = nn.Dropout(self.p)
         self.ReLU = nn.ReLU()
+        self.sensors_array = sensors_array
+        self.expension_matrix = self.system_model.sensors_array_parameters.init_expansion_matrix()
 
         # Set the subspace method for training
         self.set_diff_method(diff_method, system_model)

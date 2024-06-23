@@ -75,7 +75,7 @@ def __run_simulation(**kwargs):
             # Saving simulation scores to external file
             suffix = ""
             if train_model:
-                suffix += f"_train_{MODEL_CONFIG.get("model_type")}_{TRAINING_PARAMS.get("training_objective")}"
+                suffix += f'_train_{MODEL_CONFIG.get("model_type")}_{TRAINING_PARAMS.get("training_objective")}'
             suffix += f"_{mode}_SNR_{snr}.txt"
 
             if save_to_file:
@@ -91,6 +91,7 @@ def __run_simulation(**kwargs):
                 .set_parameter("M", SYSTEM_MODEL_PARAMS["M"])
                 .set_parameter("T", SYSTEM_MODEL_PARAMS["T"])
                 .set_parameter("snr", snr)
+                .set_parameter("sensors_array", SYSTEM_MODEL_PARAMS["sensors_array"]) # TODO Add
                 .set_parameter("field_type", SYSTEM_MODEL_PARAMS["field_type"])
                 .set_parameter("signal_nature", mode)
                 .set_parameter("eta", SYSTEM_MODEL_PARAMS["eta"])

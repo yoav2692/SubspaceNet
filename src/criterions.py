@@ -149,24 +149,37 @@ class RMSPELoss(nn.Module):
         Raises:
             None
         """
-        # Calculate RMSPE loss for only DOA
+        SORT = True # TODO to add input , sort: bool = True
         num_sources = doa_predictions.shape[1]
-        perm = list(permutations(range(num_sources), num_sources))
-        num_of_perm = len(perm)
-
-        err_angle = (doa_predictions[:, perm] - torch.tile(doa[:, None, :], (1, num_of_perm, 1)).to(torch.float32))
-        # Calculate error with modulo pi in the range [-pi/2, pi/2]
-        err_angle += torch.pi / 2
-        err_angle %= torch.pi
-        err_angle -= torch.pi / 2
-        rmspe_angle = np.sqrt(1 / num_sources) * torch.linalg.norm(err_angle, dim=-1)
-        if distance is None:
-            rmspe = rmspe_angle
-        else:
-            err_distance = (distance_predictions[:, perm].to(device) - torch.tile(distance[:, None, :], (1, num_of_perm, 1)).to(device))
-            rmspe_distance = np.sqrt(1 / num_sources) * torch.linalg.norm(err_distance, dim=-1)
+        if SORT:
+            self.balance_factor = 1 # TODO support distance
+            rmspe_distance = 0 # TODO support distance
+            sorted_doa, _= torch.sort(doa)
+            err_angle = (doa_predictions - sorted_doa ).to(torch.float32)
+            # Calculate error with modulo pi in the range [-pi/2, pi/2]
+            err_angle += torch.pi / 2
+            err_angle %= torch.pi
+            err_angle -= torch.pi / 2
+            rmspe_angle = np.sqrt(1 / num_sources) * torch.linalg.norm(err_angle, dim=-1)
             rmspe = self.balance_factor * rmspe_angle + (1 - self.balance_factor) * rmspe_distance
-        rmspe, min_idx = torch.min(rmspe, dim=-1)
+        else:
+            # Calculate RMSPE loss for only DOA
+            perm = list(permutations(range(num_sources), num_sources))
+            num_of_perm = len(perm)
+
+            err_angle = (doa_predictions[:, perm] - torch.tile(doa[:, None, :], (1, num_of_perm, 1)).to(torch.float32))
+            # Calculate error with modulo pi in the range [-pi/2, pi/2]
+            err_angle += torch.pi / 2
+            err_angle %= torch.pi
+            err_angle -= torch.pi / 2
+            rmspe_angle = np.sqrt(1 / num_sources) * torch.linalg.norm(err_angle, dim=-1)
+            if distance is None:
+                rmspe = rmspe_angle
+            else:
+                err_distance = (distance_predictions[:, perm].to(device) - torch.tile(distance[:, None, :], (1, num_of_perm, 1)).to(device))
+                rmspe_distance = np.sqrt(1 / num_sources) * torch.linalg.norm(err_distance, dim=-1)
+                rmspe = self.balance_factor * rmspe_angle + (1 - self.balance_factor) * rmspe_distance
+            rmspe, min_idx = torch.min(rmspe, dim=-1)
         result = torch.sum(rmspe)
         if distance is None:
             return result
@@ -306,20 +319,28 @@ class MSPELoss(nn.Module):
         Raises:
             None
         """
+        SORT = True # TODO to add input , sort: bool = True
         rmspe = []
         for iter in range(doa_predictions.shape[0]):
             rmspe_list = []
             batch_predictions = doa_predictions[iter].to(device)
             targets = doa[iter].to(device)
-            prediction_perm = permute_prediction(batch_predictions).to(device)
-            for prediction in prediction_perm:
-                # Calculate error with modulo pi
+            if SORT:
+                prediction_perm = sort(batch_predictions)
                 error = (((prediction - targets) + (np.pi / 2)) % np.pi) - np.pi / 2
                 # Calculate MSE over all permutations
                 rmspe_val = (1 / len(targets)) * (torch.linalg.norm(error) ** 2)
-                rmspe_list.append(rmspe_val)
-            rmspe_tensor = torch.stack(rmspe_list, dim=0)
-            rmspe_min = torch.min(rmspe_tensor)
+                rmspe_min = rmspe_val
+            else:
+                prediction_perm = permute_prediction(batch_predictions).to(device)
+                for prediction in prediction_perm:
+                    # Calculate error with modulo pi
+                    error = (((prediction - targets) + (np.pi / 2)) % np.pi) - np.pi / 2
+                    # Calculate MSE over all permutations
+                    rmspe_val = (1 / len(targets)) * (torch.linalg.norm(error) ** 2)
+                    rmspe_list.append(rmspe_val)
+                rmspe_tensor = torch.stack(rmspe_list, dim=0)
+                rmspe_min = torch.min(rmspe_tensor)
             # Choose minimal error from all permutations
             rmspe.append(rmspe_min)
         result = torch.sum(torch.stack(rmspe, dim=0))

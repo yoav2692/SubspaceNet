@@ -34,13 +34,14 @@ scenario_dict = {
     "coherent": [-10, 0, 10],
     "non-coherent": [],
 }
-
+PIPE_CLEAN = 0
 system_model_params = {
     "N": 15,                                    # number of antennas
     "M": None,                                     # number of sources
     "T": 100,                                   # number of snapshots
+    "sensors_array": f'ULA-15',                 # sensors array form
     "snr": None,                                # if defined, values in scenario_dict will be ignored
-    "field_type": "Near",                       # Near, Far
+    "field_type": "Far",                       # Near, Far
     "signal_nature": None,                      # if defined, values in scenario_dict will be ignored
     "eta": 0,                                   # steering vector error
     "bias": 0,
@@ -62,11 +63,11 @@ elif model_config.get("model_type") == "DeepCNN":
     model_config["model_params"]["grid_size"] = 361
 
 training_params = {
-    "samples_size": 1024 * 100,
+    "samples_size": 10 if PIPE_CLEAN else 1024 * 100,
     "train_test_ratio": .5,
     "training_objective": "angle",       # angle, range, source_estimation
-    "batch_size": 256,
-    "epochs": 150,
+    "batch_size": 2 if PIPE_CLEAN else 256 ,
+    "epochs": 2 if PIPE_CLEAN else 150,
     "optimizer": "Adam",                        # Adam, SGD
     "learning_rate": 0.0001,
     "weight_decay": 1e-9,
@@ -80,13 +81,13 @@ training_params = {
     "balance_factor": 1.0                # if None, the balance factor will be set to the default value -> 0.6
 }
 evaluation_params = {
-    "criterion": "cartesian",                       # rmse, rmspe, mse, mspe, cartesian
+    "criterion": training_params["criterion"],                       # rmse, rmspe, mse, mspe, cartesian
     "balance_factor": training_params["balance_factor"],
     "models": {
                 # "CascadedSubspaceNet": {"tau": 8},
                 "SubspaceNet": {"tau": 8,
-                                "diff_method": "music_2D",
-                                "field_type": "Near"},
+                                "diff_method": "esprit",
+                                "field_type": "Far"},
                 # "TransMUSIC": {},
 
             },
@@ -98,7 +99,7 @@ evaluation_params = {
         # "music_2D",
     ],
     "subspace_methods": [
-        # "esprit",
+        "esprit",
         # "music_1d",
         # "root_music",
         # "mvdr",
@@ -107,7 +108,7 @@ evaluation_params = {
         # "sps_music_1d"
         # "bb-music",
         # "music_2D",
-        "sps_music_2D",
+        # "sps_music_2D",
         # "CRB"
     ]
 }

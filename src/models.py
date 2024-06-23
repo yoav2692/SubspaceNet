@@ -138,10 +138,12 @@ class ModelGenerator(object):
         """
 
         """
+        sensors_array = self.model_params.get("sensors_array")
         tau = self.model_params.get("tau")
         diff_method = self.model_params.get("diff_method")
         field_type = self.model_params.get("field_type")
-        self.model = SubspaceNet(tau=tau,
+        self.model = SubspaceNet(sensors_array=sensors_array,
+                                 tau=tau,
                                  diff_method=diff_method,
                                  system_model=self.system_model,
                                  field_type=field_type)

@@ -504,27 +504,25 @@ def evaluate_model_based(
         # ESPRIT algorithms
         elif "esprit" in algorithm:
             # esprit = ESPRIT(system_model)
+            doa = angles
             if algorithm.startswith("sps"):
                 # Spatial smoothing
-                Rx = model_based.pre_processing(X, mode="sps")
+                Rx = model_based.pre_processing(x, mode="sps")
             else:
                 # Conventional
-                Rx = model_based.pre_processing(X, mode="sample")
-            predictions = model_based(Rx)
+                Rx = model_based.pre_processing(x, mode="sample")
+            predictions = model_based(Rx , sources_num = sources_num)
             # If the amount of predictions is less than the amount of sources
             # predictions = add_random_predictions(M, predictions, algorithm)
             # Calculate loss criterion
-            if doa.shape[1] != predictions.shape[1]:
-                y = doa[0]
-                doa, distances = y[:len(y) // 2][None, :], y[len(y) // 2:][None, :]
-            loss = criterion(predictions, doa)
+            loss = criterion(predictions[0], doa)
             loss_list.append(loss)
 
         # MVDR algorithm
         elif algorithm.startswith("mvdr"):
             mvdr = MVDR(system_model)
             # Conventional
-            _, spectrum = mvdr.narrowband(X=X, mode="sample")
+            _, spectrum = mvdr.narrowband(X=x, mode="sample")
             # Plot spectrum
             if plot_spec and i == len(dataset.dataset) - 1:
                 plot_spectrum(

@@ -34,6 +34,8 @@ class MUSIC(SubspaceMethod):
         elif self.estimation_params == "angle, range":
             self.cell_size_angle = int(self.angels.shape[0] * 0.2)
             self.cell_size_distance = int(self.distances.shape[0] * 0.2)
+        elif self.estimation_params == "angle":
+            self.cell_size_angle = int(self.angels.shape[0] * 0.2)        
 
         self.search_grid = None
         # if this is the music 2D case, the search grid is constant and can be calculated once.

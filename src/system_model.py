@@ -14,6 +14,7 @@ This script defines the SystemModel class for defining the settings of the DoA e
 # Imports
 import numpy as np
 from dataclasses import dataclass
+from src.sensors_arrays import SensorsArray
 
 
 @dataclass
@@ -28,6 +29,7 @@ class SystemModelParams:
         M (int): Number of sources.
         N (int): Number of sensors.
         T (int): Number of observations.
+        sensors_array (str): Sensors Array ("MRA-%d" or "ULA-%d").
         signal_type (str): Signal type ("NarrowBand" or "Broadband").
         field_type (str): field type ("Far" or "Near")
         freq_values (list): Frequency values for Broadband signal.
@@ -44,6 +46,7 @@ class SystemModelParams:
     M = None
     N = None
     T = None
+    sensors_array = "ULA-7"
     field_type = "Far"
     signal_type = "NarrowBand"
     freq_values = [0, 500]
@@ -74,6 +77,7 @@ class SystemModel(object):
 
         Attributes:
         -----------
+            sensors_array (str): sensors array type. Options: "ULA-%d", "MRA-%d".
             field_type (str): Field environment approximation type. Options: "Far", "Near".
             signal_type (str): Signals type. Options: "NarrowBand", "Broadband".
             N (int): Number of sensors.
@@ -106,7 +110,8 @@ class SystemModel(object):
         # Assign signal type parameters
         self.define_scenario_params()
         # Define array indices
-        self.create_array()
+        self.sensors_array_parameters = SensorsArray(sensors_array_form = system_model_params.sensors_array)
+        self.array = SensorsArray(sensors_array_form = system_model_params.sensors_array).locs
         # Calculation for the Fraunhofer and Fresnel
         self.fraunhofer, self.fresnel = self.calc_fresnel_fraunhofer_distance()
 
@@ -146,9 +151,10 @@ class SystemModel(object):
                          / (2 * (self.max_freq["Broadband"] - self.min_freq["Broadband"])),
         }
 
-    def create_array(self):
+    def create_array(self, sensors_array):
         """create an array of sensors locations, around to origin."""
-        self.array = np.linspace(0, self.params.N, self.params.N, endpoint=False)
+        self.array = sensors_array.locs
+        #self.array = np.linspace(0, self.params.N, self.params.N, endpoint=False)
 
     def calc_fresnel_fraunhofer_distance(self) -> tuple:
         """
