@@ -92,6 +92,7 @@ class SubspaceNet(nn.Module):
             Rz (torch.Tensor): Surrogate covariance matrix.
 
         """
+        x = torch.einsum('VA,BAS->BVS', self.expension_matrix, x) # Vitual, Antenna, Batch, Samples
         x = self.pre_processing(x)
         # Rx_tau shape: [Batch size, tau, 2N, N]
         self.N = x.shape[-1]

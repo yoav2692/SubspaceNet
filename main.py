@@ -36,10 +36,10 @@ scenario_dict = {
 }
 PIPE_CLEAN = 0
 system_model_params = {
-    "N": 15,                                    # number of antennas
+    "N": 7,                                    # number of antennas
     "M": None,                                     # number of sources
     "T": 100,                                   # number of snapshots
-    "sensors_array": f'ULA-15',                 # sensors array form
+    "sensors_array": f'MRA-4',                 # sensors array form
     "snr": None,                                # if defined, values in scenario_dict will be ignored
     "field_type": "Far",                       # Near, Far
     "signal_nature": None,                      # if defined, values in scenario_dict will be ignored

@@ -99,7 +99,6 @@ class SystemModel(object):
                 eta: float = 0, geo_noise_var: float = 0) -> np.ndarray: Computes the steering vector.
 
         """
-        self.array = None
         self.dist_array_elems = None
         self.time_axis = None
         self.f_sampling = None
@@ -111,7 +110,8 @@ class SystemModel(object):
         self.define_scenario_params()
         # Define array indices
         self.sensors_array_parameters = SensorsArray(sensors_array_form = system_model_params.sensors_array)
-        self.array = SensorsArray(sensors_array_form = system_model_params.sensors_array).locs
+        self.actual_array = SensorsArray(sensors_array_form = system_model_params.sensors_array).locs
+        self.full_array   = np.linspace(0, self.params.N, self.params.N, endpoint=False)
         # Calculation for the Fraunhofer and Fresnel
         self.fraunhofer, self.fresnel = self.calc_fresnel_fraunhofer_distance()
 
@@ -150,11 +150,6 @@ class SystemModel(object):
             "Broadband": 1
                          / (2 * (self.max_freq["Broadband"] - self.min_freq["Broadband"])),
         }
-
-    def create_array(self, sensors_array):
-        """create an array of sensors locations, around to origin."""
-        self.array = sensors_array.locs
-        #self.array = np.linspace(0, self.params.N, self.params.N, endpoint=False)
 
     def calc_fresnel_fraunhofer_distance(self) -> tuple:
         """
@@ -246,7 +241,7 @@ class SystemModel(object):
                     * np.pi
                     * f_sv[self.params.signal_type]
                     * (uniform_bias + mis_distance + self.dist_array_elems[self.params.signal_type])
-                    * self.array
+                    * self.full_array
                     * np.sin(theta)
                 )
                 + mis_geometry_noise
@@ -273,7 +268,7 @@ class SystemModel(object):
 
         theta = np.atleast_1d(theta)[:, np.newaxis]
         distance = np.atleast_1d(distance)[:, np.newaxis]
-        array = self.array[:, np.newaxis]
+        array = self.full_array[:, np.newaxis]
         array_square = np.power(array, 2)
         dist_array_elems = self.dist_array_elems[self.params.signal_type]
 
