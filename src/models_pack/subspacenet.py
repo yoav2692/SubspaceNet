@@ -13,6 +13,13 @@ from src.methods_pack.esprit import ESPRIT, esprit
 from src.methods_pack.root_music import RootMusic, root_music
 from src.sensors_arrays import SensorsArray
 
+class CustomMultiplyLayer(nn.Module):
+    def __init__(self, initial_tensor):
+        super(CustomMultiplyLayer, self).__init__()
+        self.expansion_tensor = nn.Parameter(initial_tensor)
+
+    def forward(self, x):
+        return torch.einsum('VA,BAS->BVS', self.expansion_tensor, x) # Vitual, Antenna, Batch, Samples
 
 class SubspaceNet(nn.Module):
     """SubspaceNet is model-based deep learning model for generalizing DOA estimation problem,
@@ -59,6 +66,8 @@ class SubspaceNet(nn.Module):
         self.diff_method = None
         self.field_type = field_type
         self.p = 0.1
+        self.expansion_tensor = self.system_model.sensors_array_parameters.init_expansion_tensor()
+        self.multiply_layer = CustomMultiplyLayer(self.expansion_tensor)
         self.conv1 = nn.Conv2d(self.tau, 16, kernel_size=2)
         self.conv2 = nn.Conv2d(32, 32, kernel_size=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=2)
@@ -68,7 +77,6 @@ class SubspaceNet(nn.Module):
         self.DropOut = nn.Dropout(self.p)
         self.ReLU = nn.ReLU()
         self.sensors_array = sensors_array
-        self.expension_matrix = self.system_model.sensors_array_parameters.init_expansion_matrix()
 
         # Set the subspace method for training
         self.set_diff_method(diff_method, system_model)
@@ -92,7 +100,7 @@ class SubspaceNet(nn.Module):
             Rz (torch.Tensor): Surrogate covariance matrix.
 
         """
-        x = torch.einsum('VA,BAS->BVS', self.expension_matrix, x) # Vitual, Antenna, Batch, Samples
+        x = self.multiply_layer(x)
         x = self.pre_processing(x)
         # Rx_tau shape: [Batch size, tau, 2N, N]
         self.N = x.shape[-1]

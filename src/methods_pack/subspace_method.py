@@ -56,7 +56,7 @@ class SubspaceMethod(nn.Module):
             return signal_subspace.to(device), noise_subspace.to(device), source_estimation, eigen_regularization
         return signal_subspace.to(device), noise_subspace.to(device), source_estimation, None
 
-    def pre_processing(self, x: torch.Tensor, mode: str = "sample"):
+    def pre_processing(self, x: torch.Tensor, mode: str = "sample", expension_tensor: torch.Tensor = None):
         if mode == "sample":
             Rx = self.__sample_covariance(x)
         elif mode == "sps":
@@ -64,7 +64,8 @@ class SubspaceMethod(nn.Module):
         else:
             raise ValueError(
                 f"SubspaceMethod.pre_processing: method {mode} is not recognized for covariance calculation.")
-
+        if expension_tensor is not None:
+            Rx = expend_correlation_matrix(Rx,expension_tensor)
         return Rx
 
     def __sample_covariance(self, x: torch.Tensor):

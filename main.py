@@ -31,7 +31,7 @@ os.system("cls||clear")
 plt.close("all")
 
 scenario_dict = {
-    "coherent": [-10, 0, 10],
+    "coherent": [10],
     "non-coherent": [],
 }
 PIPE_CLEAN = 0
@@ -66,19 +66,19 @@ training_params = {
     "samples_size": 10 if PIPE_CLEAN else 1024 * 100,
     "train_test_ratio": .5,
     "training_objective": "angle",       # angle, range, source_estimation
-    "batch_size": 2 if PIPE_CLEAN else 256 ,
+    "batch_size": 256 if PIPE_CLEAN else 256 ,
     "epochs": 2 if PIPE_CLEAN else 150,
     "optimizer": "Adam",                        # Adam, SGD
     "learning_rate": 0.0001,
     "weight_decay": 1e-9,
     "step_size": 70,
     "gamma": 0.5,
-    "true_doa_train": None,                 # if set, this doa will be set to all samples in the train dataset
+    "true_doa_train": None,                   # if set, this doa will be set to all samples in the train dataset
     "true_range_train": None,                 # if set, this range will be set to all samples in the train dataset
-    "true_doa_test": None,                  # if set, this doa will be set to all samples in the test dataset
-    "true_range_test": None,                   # if set, this range will be set to all samples in the train dataset
-    "criterion": "rmspe",                   # rmse, rmspe, mse, mspe, bce, cartesian
-    "balance_factor": 1.0                # if None, the balance factor will be set to the default value -> 0.6
+    "true_doa_test": None,                    # if set, this doa will be set to all samples in the test dataset
+    "true_range_test": None,                  # if set, this range will be set to all samples in the train dataset
+    "criterion": "rmspe",                     # rmse, rmspe, mse, mspe, bce, cartesian
+    "balance_factor": 1.0                     # if None, the balance factor will be set to the default value -> 0.6
 }
 evaluation_params = {
     "criterion": training_params["criterion"],                       # rmse, rmspe, mse, mspe, cartesian

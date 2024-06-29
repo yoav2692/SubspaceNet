@@ -444,8 +444,10 @@ def evaluate_model_based(
     model_based = get_model_based_method(algorithm, system_model)
     for i, data in enumerate(dataset):
         x, sources_num, label, masks = data
-        if RX_SAMPLE:
-            x = x[:,system_model.actual_array]
+        if len(x.shape) == 2:
+            x = x[None,:,:]
+        x = x[:,system_model.actual_array]
+        system_model.sensors_array_parameters.init_expansion_tensor()
         if max(sources_num) * 2 == label.shape[1]:
             angles, ranges = torch.split(label, max(sources_num), dim=1)
             angles = angles.to(device)
@@ -515,7 +517,7 @@ def evaluate_model_based(
                 Rx = model_based.pre_processing(x, mode="sps")
             else:
                 # Conventional
-                Rx = model_based.pre_processing(x, mode="sample")
+                Rx = model_based.pre_processing(x, mode="sample",expension_tensor=system_model.sensors_array_parameters.init_expansion_tensor())
             predictions = model_based(Rx , sources_num = sources_num)
             # If the amount of predictions is less than the amount of sources
             # predictions = add_random_predictions(M, predictions, algorithm)
