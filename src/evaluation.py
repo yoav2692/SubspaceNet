@@ -128,6 +128,7 @@ def evaluate_dnn_model(
     """
 
     # Initialize values
+    EIGEN_REGULARIZATION_WEIGHT = 0.01
     overall_loss = 0.0
     overall_loss_angle = None
     overall_loss_distance = None
@@ -180,8 +181,9 @@ def evaluate_dnn_model(
                     eigen_regularization = model_output[3].to(device)
                 elif model.field_type.endswith("Far"):
                     angles_pred = model_output[0].to(device)
-                    source_estimation = model_output[1].to(device)
-                    eigen_regularization = model_output[2].to(device)
+                    source_estimation = model_output[2].to(device)
+                    eigen_regularization = model_output[3].to(device)
+                    covariance_tensor = model_output[4].to(device)
             elif isinstance(model, TransMUSIC):
                 model_output = model(x)
                 if model.estimation_params == "angle":
@@ -274,9 +276,14 @@ def evaluate_dnn_model(
                         eval_loss = criterion(angles_pred, angles.to(device), ranges_pred, ranges.to(device))
                 elif model.field_type.endswith("Far"):
                     eval_loss = criterion(angles_pred, angles)
-                    # add eigen regularization to the loss if phase is validation
-                # if phase == "validation" and eigen_regularization is not None:
-                #     eval_loss += eigen_regularization * 0.01
+                # add eigen regularization to the loss if phase is validation
+                if phase == "validation" and eigen_regularization is not None:
+                    eval_loss += eigen_regularization * EIGEN_REGULARIZATION_WEIGHT
+                elif phase == 'test':
+                    eig_vals , ind = torch.sort(abs(torch.linalg.eigvals(covariance_tensor)[0]), descending=True)
+                    eig_vals -= eig_vals.min()
+                    eig_vals /= eig_vals.max()
+                    print(f"Eigen Values - {eig_vals}")
 
             else:
                 raise Exception(f"evaluate_dnn_model: Model type is not defined: {model.get_model_name()}")

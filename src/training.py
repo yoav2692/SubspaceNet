@@ -492,8 +492,8 @@ def train_model(training_params: TrainingParams, model_name: str, checkpoint_pat
                     eigen_regularization = model_output[3]
                 elif training_params.training_objective.endswith("angle"):
                     angles_pred = model_output[0]
-                    source_estimation = model_output[1]
-                    eigen_regularization = model_output[2]
+                    source_estimation = model_output[2]
+                    eigen_regularization = model_output[3]
                 else:
                     raise Exception(f"train_model: Unrecognized training objective"
                                     f" {training_params.training_objective}, for SubspaceNet model")
@@ -555,8 +555,8 @@ def train_model(training_params: TrainingParams, model_name: str, checkpoint_pat
                                                            ranges)
                 if isinstance(train_loss, tuple):
                     train_loss, train_loss_angle, train_loss_distance = train_loss
-                # if eigen_regularization is not None:
-                #     train_loss += eigen_regularization * 0.01
+                if eigen_regularization is not None:
+                    train_loss += eigen_regularization * 0.01
             elif isinstance(model, DeepCNN) or isinstance(model, DeepRootMUSIC) or isinstance(model,
                                                                                               DeepAugmentedMUSIC):
                 train_loss = training_params.criterion(angles_pred.float(), angles.float())

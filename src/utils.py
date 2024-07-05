@@ -329,8 +329,8 @@ def _spatial_smoothing_covariance(sampels: torch.Tensor):
 
 def expend_correlation_matrix(cor_tensor : torch.Tensor , expansion_tensor : torch.Tensor):
     # dtype=torch.complex128
-    left_mul    = torch.einsum('VA,...Av->...Vv', expansion_tensor, cor_tensor) # Virtual, Antenna, Samples
-    expand_tensor = torch.einsum('...Vv,vV->...VV', left_mul, expansion_tensor.T.conj()) # Virtual, Antenna, Samples
+    left_mul    = torch.einsum('VA,...Aa->...Va', expansion_tensor, cor_tensor) # Virtual, Antenna, antenna
+    expand_tensor = torch.einsum('...Va,aB->...VB', left_mul, expansion_tensor.T.conj()) # Virtual, antenna, B(v)irtual
     return expand_tensor
 
 if __name__ == "__main__":

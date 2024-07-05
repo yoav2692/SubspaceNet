@@ -59,6 +59,7 @@ class SubspaceNet(nn.Module):
             M (int): Number of sources.
 
         """
+        self.EXPANSION_TENSOR_LEARNING = 0
         super(SubspaceNet, self).__init__()
         self.tau = tau
         self.system_model = system_model
@@ -67,7 +68,8 @@ class SubspaceNet(nn.Module):
         self.field_type = field_type
         self.p = 0.1
         self.expansion_tensor = self.system_model.sensors_array_parameters.init_expansion_tensor()
-        self.multiply_layer = CustomMultiplyLayer(self.expansion_tensor)
+        if self.EXPANSION_TENSOR_LEARNING:
+            self.multiply_layer = CustomMultiplyLayer(self.expansion_tensor)
         self.conv1 = nn.Conv2d(self.tau, 16, kernel_size=2)
         self.conv2 = nn.Conv2d(32, 32, kernel_size=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=2)
@@ -100,7 +102,10 @@ class SubspaceNet(nn.Module):
             Rz (torch.Tensor): Surrogate covariance matrix.
 
         """
-        x = self.multiply_layer(x)
+        if self.EXPANSION_TENSOR_LEARNING:
+            x = self.multiply_layer(x)
+        else:
+            x = torch.einsum('VA,BAS->BVS', self.expansion_tensor, x) # Vitual, Antenna, Batch, Samples
         x = self.pre_processing(x)
         # Rx_tau shape: [Batch size, tau, 2N, N]
         self.N = x.shape[-1]
@@ -145,7 +150,7 @@ class SubspaceNet(nn.Module):
             elif isinstance(self.diff_method, ESPRIT):
                 # Esprit output
                 doa_prediction, sources_estimation, eigen_regularization = method_output
-                return doa_prediction, sources_estimation, eigen_regularization
+                return doa_prediction, None ,sources_estimation, eigen_regularization , Rz
             else:
                 raise Exception(f"SubspaceNet.forward: Method {self.diff_method} is not defined for SubspaceNet")
 
