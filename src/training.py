@@ -30,11 +30,7 @@ None
 import warnings
 
 # Imports
-import torch
-import numpy as np
 import matplotlib.pyplot as plt
-import torch.nn as nn
-import time
 import copy
 from pathlib import Path
 import torch.optim as optim
@@ -43,6 +39,7 @@ from torch.autograd import Variable
 from tqdm import tqdm
 from torch.optim import lr_scheduler
 from sklearn.model_selection import train_test_split
+# internal imports
 from src.utils import *
 from src.criterions import *
 from src.system_model import SystemModel, SystemModelParams
@@ -448,6 +445,8 @@ def train_model(training_params: TrainingParams, model_name: str, checkpoint_pat
         # Set model to train mode
         model.train()
         train_length = 0
+        # eigen regularization weight
+        eigen_regularization_weight = training_params.learning_rate * 1000
 
         for data in tqdm(training_params.train_dataset):
             x, sources_num, label, masks = data #TODO
@@ -556,7 +555,8 @@ def train_model(training_params: TrainingParams, model_name: str, checkpoint_pat
                 if isinstance(train_loss, tuple):
                     train_loss, train_loss_angle, train_loss_distance = train_loss
                 if eigen_regularization is not None:
-                    train_loss += eigen_regularization * 0.01
+                    train_loss += eigen_regularization * eigen_regularization_weight
+
             elif isinstance(model, DeepCNN) or isinstance(model, DeepRootMUSIC) or isinstance(model,
                                                                                               DeepAugmentedMUSIC):
                 train_loss = training_params.criterion(angles_pred.float(), angles.float())
@@ -611,7 +611,8 @@ def train_model(training_params: TrainingParams, model_name: str, checkpoint_pat
             model,
             training_params.valid_dataset,
             training_params.criterion,
-            phase="validation"
+            phase="validation",
+            eigen_regula_weight=eigen_regularization_weight,
         )
         loss_valid_list.append(valid_loss.get("Overall"))
 

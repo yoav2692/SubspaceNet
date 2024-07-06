@@ -27,26 +27,24 @@ evaluate: Wrapper function for model and algorithm evaluations.
 
 
 """
+# Imports
 import os
 import time
 import numpy as np
 import torch.linalg
-# Imports
 import torch.nn as nn
-from src.utils import *
+from pathlib import Path
 
-from src.criterions import RMSPELoss, MSPELoss, RMSELoss, CartesianLoss
-from src.criterions import RMSPE, MSPE
-# import methods
+# Internal imports
+from src.utils import *
+from src.criterions import (RMSPELoss, MSPELoss, RMSELoss, CartesianLoss, RMSPE, MSPE)
 from src.methods import MVDR
 from src.methods_pack.music import MUSIC
 from src.methods_pack.root_music import RootMusic
 from src.methods_pack.esprit import ESPRIT
 from src.methods_pack.mle import MLE
-# import models
 from src.models import (ModelGenerator, SubspaceNet, CascadedSubspaceNet, DeepAugmentedMUSIC,
                         DeepCNN, DeepRootMUSIC, TransMUSIC)
-
 from src.plotting import plot_spectrum
 from src.system_model import SystemModel, SystemModelParams
 
@@ -82,7 +80,7 @@ def get_model(model_name: str, params: dict, system_model: SystemModel):
         .set_model()
     )
     model = model_config.model
-    path = os.path.join(os.getcwd(), "data", "weights", "final_models", model.get_model_file_name())
+    path = os.path.join(Path(__file__).parent.parent, "data", "weights", "final_models", model.get_model_file_name())
     try:
         model.load_state_dict(torch.load(path))
     except FileNotFoundError as e:
@@ -91,13 +89,13 @@ def get_model(model_name: str, params: dict, system_model: SystemModel):
         print("####################################")
         try:
             print(f"Model {model_name} not found in final_models, trying to load from temp weights.")
-            path = os.path.join(os.getcwd(), "data", "weights", model.get_model_file_name())
+            path = os.path.join(Path(__file__).parent.parent, "data", "weights", model.get_model_file_name())
             model.load_state_dict(torch.load(path))
         except FileNotFoundError as e:
             print("####################################")
             print(e)
             print("####################################")
-            print(f"Model {model_name} not found")
+            warnings.warn(f"get_model: Model {model_name} not found")
     return model.to(device)
 
 
@@ -107,7 +105,8 @@ def evaluate_dnn_model(
         criterion: nn.Module,
         plot_spec: bool = False,
         figures: dict = None,
-        phase: str = "test") -> dict:
+        phase: str = "test",
+        eigen_regula_weight = None) -> dict:
     """
     Evaluate the DNN model on a given dataset.
 
@@ -145,9 +144,10 @@ def evaluate_dnn_model(
     with torch.no_grad():
         for data in dataset:
             x, sources_num, label, masks = data #TODO
-            if len(x.shape) == 2:
-                x = x[None,:,:]
+            if x.dim() == 2:
+                x = x.unsqueeze(0)
             x = x[:,model.system_model.actual_array]
+            # x, sources_num, label = data #TODO
             # Split true label to angles and ranges, if needed
             if max(sources_num) * 2 == label.shape[1]:
                 angles, ranges = torch.split(label, max(sources_num), dim=1)
@@ -277,14 +277,14 @@ def evaluate_dnn_model(
                 elif model.field_type.endswith("Far"):
                     eval_loss = criterion(angles_pred, angles)
                 # add eigen regularization to the loss if phase is validation
-                # if phase == "validation" and eigen_regularization is not None:
-                #     eval_loss += eigen_regularization * EIGEN_REGULARIZATION_WEIGHT
+                if phase == "validation" and eigen_regularization is not None:
+                    eval_loss += eigen_regularization * EIGEN_REGULARIZATION_WEIGHT
                 # elif phase == 'test':
                 #     eig_vals , ind = torch.sort(abs(torch.linalg.eigvals(covariance_tensor)[0]), descending=True)
                 #     eig_vals -= eig_vals.min()
                 #     eig_vals /= eig_vals.max()
                 #     print(f"Eigen Values - {eig_vals}")
-
+                    # add eigen regularization to the loss if phase is validation
             else:
                 raise Exception(f"evaluate_dnn_model: Model type is not defined: {model.get_model_name()}")
             # add the batch evaluation loss to epoch loss
@@ -451,8 +451,8 @@ def evaluate_model_based(
     model_based = get_model_based_method(algorithm, system_model)
     for i, data in enumerate(dataset):
         x, sources_num, label, masks = data
-        if len(x.shape) == 2:
-            x = x[None,:,:]
+        if x.dim() == 2:
+            x = x.unsqueeze(0)
         x = x[:,system_model.actual_array]
         system_model.sensors_array_parameters.init_expansion_tensor()
         if max(sources_num) * 2 == label.shape[1]:
@@ -565,9 +565,7 @@ def evaluate_model_based(
             acc_list.append(acc_tmp)
 
         else:
-            raise Exception(
-                f"evaluate_augmented_model: Algorithm {algorithm} is not supported."
-            )
+            warnings.warn(f"evaluate_augmented_model: Algorithm {algorithm} is not supported.")
     result = {"Overall": torch.mean(torch.Tensor(loss_list)).item()}
     if loss_list_angle and loss_list_distance:
         result["Angle"] = torch.mean(torch.Tensor(loss_list_angle)).item()
@@ -614,7 +612,7 @@ def evaluate_crb(dataset: list,
             distances = []
             ucrb_cartzien = None
             for i, data in enumerate(dataset):
-                _, labels = data
+                _, _, labels, _ = data
                 angles.extend(*labels[:, :labels.shape[1] // 2][None, :].detach().numpy())
                 distances.extend(*labels[:, labels.shape[1] // 2:][None, :].detach().numpy())
             angles = np.array(angles)
