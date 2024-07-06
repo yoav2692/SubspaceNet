@@ -32,7 +32,7 @@ os.system("cls||clear")
 plt.close("all")
 
 scenario_dict = {
-    "coherent": [10],
+    "coherent": [],
     "non-coherent": [10],
 }
 
