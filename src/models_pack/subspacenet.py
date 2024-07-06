@@ -55,6 +55,7 @@ class SubspaceNet(nn.Module):
         self.tau = tau
         self.system_model = system_model
         self.N = self.system_model.params.N
+        self.actual_array = self.system_model.actual_array
         self.diff_method = None
         self.field_type = field_type
         self.p = 0.1

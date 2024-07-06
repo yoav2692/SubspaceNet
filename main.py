@@ -31,7 +31,7 @@ import argparse
 os.system("cls||clear")
 plt.close("all")
 
-PIPE_CLEAN = 0
+PIPE_CLEAN = 1
 SANITY_CHECK = 1
 scenario_dict = {
     "coherent": [],
@@ -66,7 +66,7 @@ elif model_config.get("model_type") == "DeepCNN":
     model_config["model_params"]["grid_size"] = 361
 
 training_params = {
-    "samples_size": 1024 * 8 if PIPE_CLEAN else 1024 * 8,
+    "samples_size": 1024 if PIPE_CLEAN else 1024 * 8,
     "train_test_ratio": .5,
     "training_objective": "angle",       # angle, range, source_estimation
     "batch_size": 256 if PIPE_CLEAN else 256,

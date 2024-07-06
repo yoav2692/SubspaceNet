@@ -450,6 +450,7 @@ def train_model(training_params: TrainingParams, model_name: str, checkpoint_pat
 
         for data in tqdm(training_params.train_dataset):
             x, sources_num, label, masks = data #TODO
+            x = x[:,model.actual_array]
             # x, sources_num, label = data
             # Split true label to angles and ranges, if needed
             if max(sources_num) * 2 == label.shape[1]:
