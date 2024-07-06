@@ -277,13 +277,13 @@ def evaluate_dnn_model(
                 elif model.field_type.endswith("Far"):
                     eval_loss = criterion(angles_pred, angles)
                 # add eigen regularization to the loss if phase is validation
-                if phase == "validation" and eigen_regularization is not None:
-                    eval_loss += eigen_regularization * EIGEN_REGULARIZATION_WEIGHT
-                elif phase == 'test':
-                    eig_vals , ind = torch.sort(abs(torch.linalg.eigvals(covariance_tensor)[0]), descending=True)
-                    eig_vals -= eig_vals.min()
-                    eig_vals /= eig_vals.max()
-                    print(f"Eigen Values - {eig_vals}")
+                # if phase == "validation" and eigen_regularization is not None:
+                #     eval_loss += eigen_regularization * EIGEN_REGULARIZATION_WEIGHT
+                # elif phase == 'test':
+                #     eig_vals , ind = torch.sort(abs(torch.linalg.eigvals(covariance_tensor)[0]), descending=True)
+                #     eig_vals -= eig_vals.min()
+                #     eig_vals /= eig_vals.max()
+                #     print(f"Eigen Values - {eig_vals}")
 
             else:
                 raise Exception(f"evaluate_dnn_model: Model type is not defined: {model.get_model_name()}")

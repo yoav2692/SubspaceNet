@@ -34,7 +34,7 @@ scenario_dict = {
     "coherent": [],
     "non-coherent": [10],
 }
-PIPE_CLEAN = 0
+PIPE_CLEAN = 1
 SANITY_CHECK = 1
 system_model_params = {
     "N": 7,                                    # number of antennas
@@ -64,11 +64,11 @@ elif model_config.get("model_type") == "DeepCNN":
     model_config["model_params"]["grid_size"] = 361
 
 training_params = {
-    "samples_size": 10 if PIPE_CLEAN else 1024 * 100,
+    "samples_size": 1024 * 100 if PIPE_CLEAN else 1024 * 100,
     "train_test_ratio": .5,
     "training_objective": "angle",       # angle, range, source_estimation
     "batch_size": 256 if PIPE_CLEAN else 256 ,
-    "epochs": 2 if PIPE_CLEAN else 150,
+    "epochs": 10 if PIPE_CLEAN else 150,
     "optimizer": "Adam",                        # Adam, SGD
     "learning_rate": 0.0001,
     "weight_decay": 1e-9,
@@ -120,7 +120,7 @@ simulation_commands = {
     "TRAIN_MODEL": True,
     "SAVE_MODEL": False,
     "EVALUATE_MODE": True,
-    "PLOT_RESULTS": False
+    "PLOT_RESULTS": True
 }
 
 if __name__ == "__main__":
