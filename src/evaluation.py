@@ -145,6 +145,7 @@ def evaluate_dnn_model(
             x, sources_num, label, masks = data #TODO
             if x.dim() == 2:
                 x = x.unsqueeze(0)
+            x = x[:,model.actual_array]
             # x, sources_num, label = data #TODO
             # Split true label to angles and ranges, if needed
             if max(sources_num) * 2 == label.shape[1]:

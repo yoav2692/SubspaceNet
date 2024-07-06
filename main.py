@@ -31,7 +31,7 @@ import argparse
 os.system("cls||clear")
 plt.close("all")
 
-PIPE_CLEAN = 1
+PIPE_CLEAN = 0
 SANITY_CHECK = 1
 scenario_dict = {
     "coherent": [],
@@ -41,7 +41,7 @@ scenario_dict = {
 system_model_params = {
     "N": 7,                                    # number of antennas
     "M": 2 if SANITY_CHECK else None,           # number of sources
-    "sensors_array_form": "ULA-7",                   # ULA-7, MRA-4
+    "sensors_array_form": "MRA-4",                   # ULA-7, MRA-4
     "T": 100,                                   # number of snapshots
     "snr": None,                                # if defined, values in scenario_dict will be ignored
     "field_type": "Far",                       # Near, Far
