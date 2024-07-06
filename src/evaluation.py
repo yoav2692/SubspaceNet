@@ -475,13 +475,13 @@ def evaluate_model_based(
             # If the amount of predictions is less than the amount of sources
             predictions = add_random_predictions(M, predictions, algorithm)
             # Calculate loss criterion
-            loss = criterion(predictions, doa * R2D)
+            loss = criterion(predictions, angles * R2D)
             loss_list.append(loss)
             # Plot spectrum
             if plot_spec and i == len(dataset.dataset) - 1:
                 plot_spectrum(
                     predictions=predictions_all,
-                    true_DOA=doa[0] * R2D,
+                    true_DOA=angles[0] * R2D,
                     roots=roots,
                     algorithm=algorithm.upper(),
                     figures=figures,
@@ -501,7 +501,7 @@ def evaluate_model_based(
             # If the amount of predictions is less than the amount of sources
             # predictions = add_random_predictions(M, predictions, algorithm)
             # Calculate loss criterion
-            loss = criterion(predictions, doa)
+            loss = criterion(predictions, angles)
             loss_list.append(loss)
 
         # ESPRIT algorithms
@@ -509,18 +509,18 @@ def evaluate_model_based(
             # esprit = ESPRIT(system_model)
             if algorithm.startswith("sps"):
                 # Spatial smoothing
-                Rx = model_based.pre_processing(X, mode="sps")
+                Rx = model_based.pre_processing(x, mode="sps")
             else:
                 # Conventional
-                Rx = model_based.pre_processing(X, mode="sample")
+                Rx = model_based.pre_processing(x, mode="sample")
             predictions = model_based(Rx)
             # If the amount of predictions is less than the amount of sources
             # predictions = add_random_predictions(M, predictions, algorithm)
             # Calculate loss criterion
-            if doa.shape[1] != predictions.shape[1]:
-                y = doa[0]
-                doa, distances = y[:len(y) // 2][None, :], y[len(y) // 2:][None, :]
-            loss = criterion(predictions, doa)
+            if angles.shape[1] != predictions[0].shape[1]:
+                y = angles[0]
+                angles, distances = y[:len(y) // 2][None, :], y[len(y) // 2:][None, :]
+            loss = criterion(predictions, angles)
             loss_list.append(loss)
 
         # MVDR algorithm

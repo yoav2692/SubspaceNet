@@ -119,6 +119,7 @@ class RMSPELoss(nn.Module):
             self.balance_factor = nn.Parameter(torch.Tensor([BALANCE_FACTOR])).to(device).to(torch.float64)
         else:
             self.balance_factor = nn.Parameter(torch.Tensor([balance_factor])).to(device).to(torch.float64)
+        self.SORT = False
 
     def forward(self, doa_predictions: torch.Tensor, doa: torch.Tensor,
                 distance_predictions: torch.Tensor = None, distance: torch.Tensor = None):
@@ -149,31 +150,47 @@ class RMSPELoss(nn.Module):
         Raises:
             None
         """
-        # Calculate RMSPE loss for only DOA
-        num_sources = doa_predictions.shape[1]
-        perm = list(permutations(range(num_sources), num_sources))
-        num_of_perm = len(perm)
-
-        err_angle = (doa_predictions[:, perm] - torch.tile(doa[:, None, :], (1, num_of_perm, 1)).to(torch.float32))
-        # Calculate error with modulo pi in the range [-pi/2, pi/2]
-        err_angle += torch.pi / 2
-        err_angle %= torch.pi
-        err_angle -= torch.pi / 2
-        rmspe_angle = np.sqrt(1 / num_sources) * torch.linalg.norm(err_angle, dim=-1)
-        if distance is None:
-            rmspe = rmspe_angle
+        if type(doa_predictions) == tuple:
+            num_sources = doa_predictions[0].shape[1]
         else:
-            err_distance = (distance_predictions[:, perm].to(device) - torch.tile(distance[:, None, :], (1, num_of_perm, 1)).to(device))
-            rmspe_distance = np.sqrt(1 / num_sources) * torch.linalg.norm(err_distance, dim=-1)
-            rmspe = self.balance_factor * rmspe_angle + (1 - self.balance_factor) * rmspe_distance
-        rmspe, min_idx = torch.min(rmspe, dim=-1)
-        result = torch.sum(rmspe)
-        if distance is None:
+            num_sources = doa_predictions.shape[1]
+        if self.SORT:
+            doa_predictions_sorted , _ = torch.sort(doa_predictions[0],descending = False)
+            err_angle = (doa_predictions_sorted - doa).to(torch.float32)
+            # Calculate error with modulo pi in the range [-pi/2, pi/2]
+            err_angle += torch.pi / 2
+            err_angle %= torch.pi
+            err_angle -= torch.pi / 2
+            rmspe_angle = np.sqrt(1 / num_sources) * torch.linalg.norm(err_angle, dim=-1)
+            rmspe = rmspe_angle
+            result = torch.sum(rmspe)
             return result
         else:
-            result_angle = torch.sum(torch.gather(rmspe_angle, dim=1, index=min_idx[:, None]))
-            result_distance = torch.sum(torch.gather(rmspe_distance, dim=1, index=min_idx[:, None]))
-            return result, result_angle, result_distance
+
+            # Calculate RMSPE loss for only DOA
+            perm = list(permutations(range(num_sources), num_sources))
+            num_of_perm = len(perm)
+
+            err_angle = (doa_predictions[:, perm] - torch.tile(doa[:, None, :], (1, num_of_perm, 1)).to(torch.float32))
+            # Calculate error with modulo pi in the range [-pi/2, pi/2]
+            err_angle += torch.pi / 2
+            err_angle %= torch.pi
+            err_angle -= torch.pi / 2
+            rmspe_angle = np.sqrt(1 / num_sources) * torch.linalg.norm(err_angle, dim=-1)
+            if distance is None:
+                rmspe = rmspe_angle
+            else:
+                err_distance = (distance_predictions[:, perm].to(device) - torch.tile(distance[:, None, :], (1, num_of_perm, 1)).to(device))
+                rmspe_distance = np.sqrt(1 / num_sources) * torch.linalg.norm(err_distance, dim=-1)
+                rmspe = self.balance_factor * rmspe_angle + (1 - self.balance_factor) * rmspe_distance
+            rmspe, min_idx = torch.min(rmspe, dim=-1)
+            result = torch.sum(rmspe)
+            if distance is None:
+                return result
+            else:
+                result_angle = torch.sum(torch.gather(rmspe_angle, dim=1, index=min_idx[:, None]))
+                result_distance = torch.sum(torch.gather(rmspe_distance, dim=1, index=min_idx[:, None]))
+                return result, result_angle, result_distance
 
             # rmspe = []
             # for iter in range(doa_predictions.shape[0]):

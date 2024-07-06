@@ -31,6 +31,8 @@ import argparse
 os.system("cls||clear")
 plt.close("all")
 
+PIPE_CLEAN = 0
+SANITY_CHECK = 1
 scenario_dict = {
     "coherent": [],
     "non-coherent": [10],
@@ -38,7 +40,7 @@ scenario_dict = {
 
 system_model_params = {
     "N": 7,                                    # number of antennas
-    "M": 2,                                     # number of sources
+    "M": 2 if SANITY_CHECK else None,                                     # number of sources
     "T": 100,                                   # number of snapshots
     "snr": None,                                # if defined, values in scenario_dict will be ignored
     "field_type": "Far",                       # Near, Far
@@ -63,11 +65,11 @@ elif model_config.get("model_type") == "DeepCNN":
     model_config["model_params"]["grid_size"] = 361
 
 training_params = {
-    "samples_size": 1024 * 8,
-    "train_test_ratio": .1,
+    "samples_size": 1024 * 8 if PIPE_CLEAN else 1024 * 8,
+    "train_test_ratio": .5,
     "training_objective": "angle",       # angle, range, source_estimation
-    "batch_size": 256,
-    "epochs": 50,
+    "batch_size": 256 if PIPE_CLEAN else 256,
+    "epochs": 10 if PIPE_CLEAN else 50,
     "optimizer": "Adam",                        # Adam, SGD
     "learning_rate": 0.0001,
     "weight_decay": 1e-9,
@@ -98,7 +100,7 @@ evaluation_params = {
         # "music_2D",
     ],
     "subspace_methods": [
-        # "esprit",
+        "esprit",
         # "music_1d",
         # "root_music",
         # "mvdr",
