@@ -40,7 +40,7 @@ scenario_dict = {
 
 system_model_params = {
     "N": 7,                                    # number of antennas
-    "M": 2 if SANITY_CHECK else None,                                     # number of sources
+    "M": 2 if SANITY_CHECK else None,           # number of sources
     "T": 100,                                   # number of snapshots
     "snr": None,                                # if defined, values in scenario_dict will be ignored
     "field_type": "Far",                       # Near, Far

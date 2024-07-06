@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from src.utils import *
 from src.system_model import SystemModel
+import matplotlib.pyplot as plt
 
 
 class SubspaceMethod(nn.Module):
@@ -13,7 +14,12 @@ class SubspaceMethod(nn.Module):
     def __init__(self, system_model: SystemModel):
         super(SubspaceMethod, self).__init__()
         self.system_model = system_model
-        self.eigen_threshold = nn.Parameter(torch.tensor(.5), requires_grad=False)
+        self.eigen_threshold_val = 0.5
+        self.eigen_threshold = nn.Parameter(torch.tensor(self.eigen_threshold_val), requires_grad=False)
+        self.PLOT_EV = True
+        if self.PLOT_EV:
+            self.colorCounter = 0
+            plt.figure(f"EV Distribution for {self.eigen_threshold_val}")
 
     def subspace_separation(self,
                             covariance: torch.Tensor,
@@ -48,6 +54,13 @@ class SubspaceMethod(nn.Module):
         else:
             signal_subspace = sorted_eigvectors[:, :, :number_of_sources]
             noise_subspace = sorted_eigvectors[:, :, number_of_sources:]
+        if self.PLOT_EV:
+            ## use your debug console 
+            # self.PLOT_EV
+            # plt.figure() or plt.figure().clear
+            plt.stem(normalized_eigen[0].detach().numpy(),  bottom=self.eigen_threshold_val , markerfmt=f'C{self.colorCounter}o')
+            self.colorCounter += 1
+            self.colorCounter %= 10
 
         if eigen_regularization:
             l_eig = self.eigen_regularization(normalized_eigen, number_of_sources)
