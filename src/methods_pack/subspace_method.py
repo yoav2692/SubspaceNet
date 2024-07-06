@@ -16,7 +16,7 @@ class SubspaceMethod(nn.Module):
         self.system_model = system_model
         self.eigen_threshold_val = 0.5
         self.eigen_threshold = nn.Parameter(torch.tensor(self.eigen_threshold_val), requires_grad=False)
-        self.PLOT_EV = True
+        self.PLOT_EV = False
         if self.PLOT_EV:
             self.colorCounter = 0
             plt.figure(f"EV Distribution for {self.eigen_threshold_val}")

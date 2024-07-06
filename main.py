@@ -55,7 +55,7 @@ model_config = {
     "model_params": {}
 }
 if model_config.get("model_type") == "SubspaceNet":
-    model_config["model_params"]["diff_method"] = "music_1D"  # esprit, music_1D, music_2D
+    model_config["model_params"]["diff_method"] = "esprit"  # esprit, music_1D, music_2D
     model_config["model_params"]["tau"] = 8
     model_config["model_params"]["field_type"] = "Far"     # Near, Far
 
