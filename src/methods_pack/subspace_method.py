@@ -18,6 +18,7 @@ class SubspaceMethod(nn.Module):
         self.eigen_threshold = nn.Parameter(torch.tensor(self.eigen_threshold_val), requires_grad=False)
         self.PLOT_EV = False
         if self.PLOT_EV:
+            self.colorCounter = 0
             plt.figure(f"EV Distribution for {self.eigen_threshold_val}")
 
     def subspace_separation(self,
@@ -55,7 +56,8 @@ class SubspaceMethod(nn.Module):
             noise_subspace = sorted_eigvectors[:, :, number_of_sources:]
 
         if self.PLOT_EV:
-            plt.stem(normalized_eigen[0].detach().numpy(),  bottom=self.eigen_threshold_val)
+            plt.stem(normalized_eigen[0].detach().numpy(),  bottom=self.eigen_threshold_val , markerfmt=f'C{self.colorCounter}o')
+            self.colorCounter += 1
 
         if eigen_regularization:
             l_eig = self.eigen_regularization(normalized_eigen, number_of_sources)

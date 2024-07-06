@@ -54,7 +54,7 @@ model_config = {
     "model_params": {}
 }
 if model_config.get("model_type") == "SubspaceNet":
-    model_config["model_params"]["diff_method"] = "music_1D"  # esprit, music_1D, music_2D
+    model_config["model_params"]["diff_method"] = "esprit"  # esprit, music_1D, music_2D
     model_config["model_params"]["tau"] = 8
     model_config["model_params"]["field_type"] = "Far"     # Near, Far
 
@@ -69,7 +69,7 @@ training_params = {
     "train_test_ratio": .1,
     "training_objective": "angle",       # angle, range, source_estimation
     "batch_size": 256 if PIPE_CLEAN else 256 ,
-    "epochs": 20 if PIPE_CLEAN else 150,
+    "epochs": 100 if PIPE_CLEAN else 150,
     "optimizer": "Adam",                        # Adam, SGD
     "learning_rate": 0.0001,
     "weight_decay": 1e-9,
