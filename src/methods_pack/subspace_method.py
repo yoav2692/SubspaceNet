@@ -53,8 +53,6 @@ class SubspaceMethod(nn.Module):
         else:
             signal_subspace = sorted_eigvectors[:, :, :number_of_sources]
             noise_subspace = sorted_eigvectors[:, :, number_of_sources:]
-        else:
-            pass
 
         if self.PLOT_EV:
             plt.stem(normalized_eigen[0].detach().numpy(),  bottom=self.eigen_threshold_val)

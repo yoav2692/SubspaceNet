@@ -153,10 +153,10 @@ class SubspaceNet(nn.Module):
 
                 # return doa_prediction, None ,sources_estimation, eigen_regularization , Rz
 
-                return doa_prediction, sources_estimation, eigen_regularization
+                return doa_prediction, [] , sources_estimation, eigen_regularization
             elif isinstance(self.diff_method, MUSIC):
                 doa_prediction, sources_estimation, eigen_regularization = method_output
-                return doa_prediction, sources_estimation, eigen_regularization
+                return doa_prediction, [] , sources_estimation, eigen_regularization
             else:
                 raise Exception(f"SubspaceNet.forward: Method {self.diff_method} is not defined for SubspaceNet")
 

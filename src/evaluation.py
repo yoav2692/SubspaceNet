@@ -183,7 +183,7 @@ def evaluate_dnn_model(
                     angles_pred = model_output[0].to(device)
                     source_estimation = model_output[2].to(device)
                     eigen_regularization = model_output[3].to(device)
-                    covariance_tensor = model_output[4].to(device)
+                    # covariance_tensor = model_output[4].to(device)
             elif isinstance(model, TransMUSIC):
                 model_output = model(x)
                 if model.estimation_params == "angle":

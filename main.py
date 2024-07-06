@@ -65,11 +65,11 @@ elif model_config.get("model_type") == "DeepCNN":
     model_config["model_params"]["grid_size"] = 361
 
 training_params = {
-    "samples_size": 1024 * 100 if PIPE_CLEAN else 1024 * 100,
-    "train_test_ratio": .5,
+    "samples_size": 1024 * 8 if PIPE_CLEAN else 1024 * 100,
+    "train_test_ratio": .1,
     "training_objective": "angle",       # angle, range, source_estimation
     "batch_size": 256 if PIPE_CLEAN else 256 ,
-    "epochs": 10 if PIPE_CLEAN else 150,
+    "epochs": 20 if PIPE_CLEAN else 150,
     "optimizer": "Adam",                        # Adam, SGD
     "learning_rate": 0.0001,
     "weight_decay": 1e-9,
