@@ -41,6 +41,7 @@ scenario_dict = {
 system_model_params = {
     "N": 7,                                    # number of antennas
     "M": 2 if SANITY_CHECK else None,           # number of sources
+    "sensors_array_form": "ULA-7",                   # ULA-7, MRA-4
     "T": 100,                                   # number of snapshots
     "snr": None,                                # if defined, values in scenario_dict will be ignored
     "field_type": "Far",                       # Near, Far
@@ -128,6 +129,7 @@ def parse_arguments():
     parser.add_argument('--snr', type=str, help='SNR value', default=None)
     parser.add_argument('--N', type=int, help='Number of antennas', default=None)
     parser.add_argument('--M', type=int, help='Number of sources', default=None)
+    parser.add_argument('--S', type=int, help='Sensors Array', default=None)
     parser.add_argument('--field_type', type=str, help='Field type', default=None)
     parser.add_argument('--signal_nature', type=str, help='Signal nature', default=None)
     parser.add_argument('--model_type', type=str, help='Model type', default=None)
@@ -149,6 +151,8 @@ if __name__ == "__main__":
         system_model_params["N"] = int(args.N)
     if args.M is not None:
         system_model_params["M"] = int(args.M)
+    if args.S is not None:
+        system_model_params["sensors_array_form"] = args.S
     if args.field_type is not None:
         system_model_params["field_type"] = args.field_type
     if args.signal_nature is not None:

@@ -186,7 +186,7 @@ class MUSIC(SubspaceMethod):
             raise ValueError(f"set_search_grid: Unrecognized field type: {self.system_model.params.field_type}")
 
     def __set_search_grid_far_field(self):
-        array = torch.Tensor(self.system_model.array[:, None]).to(torch.float64).to(device)
+        array = torch.Tensor(self.system_model.virtual_array[:, None]).to(torch.float64).to(device)
         theta = self.angels[:, None]
         time_delay = torch.einsum("nm, na -> na",
                                   array,
@@ -214,7 +214,7 @@ class MUSIC(SubspaceMethod):
             distances = known_distances.float()
             if len(distances.shape) == 1:
                 distances = torch.atleast_1d(distances)[:, None]
-        array = torch.Tensor(self.system_model.array[:, None]).to(torch.float64).to(device)
+        array = torch.Tensor(self.system_model.virtual_array[:, None]).to(torch.float64).to(device)
         array_square = torch.pow(array, 2).to(torch.float64)
 
         first_order = torch.einsum("nm, na -> na",

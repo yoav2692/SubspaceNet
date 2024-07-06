@@ -14,6 +14,7 @@ This script defines the SystemModel class for defining the settings of the DoA e
 # Imports
 import numpy as np
 from dataclasses import dataclass
+from src.sensors_arrays import *
 
 
 @dataclass
@@ -28,6 +29,7 @@ class SystemModelParams:
         M (int): Number of sources.
         N (int): Number of sensors.
         T (int): Number of observations.
+        sensors_array_form (str) : defines SensorsArray
         signal_type (str): Signal type ("NarrowBand" or "Broadband").
         field_type (str): field type ("Far" or "Near")
         freq_values (list): Frequency values for Broadband signal.
@@ -42,6 +44,7 @@ class SystemModelParams:
     """
 
     M = None
+    sensors_array_form = None
     N = None
     T = None
     field_type = "Far"
@@ -95,7 +98,8 @@ class SystemModel(object):
                 eta: float = 0, geo_noise_var: float = 0) -> np.ndarray: Computes the steering vector.
 
         """
-        self.array = None
+        self.sensors_array = SensorsArray(system_model_params.sensors_array_form)
+        self.actual_array = self.sensors_array.locs
         self.dist_array_elems = None
         self.time_axis = None
         self.f_sampling = None
@@ -148,7 +152,7 @@ class SystemModel(object):
 
     def create_array(self):
         """create an array of sensors locations, around to origin."""
-        self.array = np.linspace(0, self.params.N, self.params.N, endpoint=False)
+        self.virtual_array = np.linspace(0, self.params.N, self.params.N, endpoint=False)
 
     def calc_fresnel_fraunhofer_distance(self) -> tuple:
         """
@@ -240,7 +244,7 @@ class SystemModel(object):
                     * np.pi
                     * f_sv[self.params.signal_type]
                     * (uniform_bias + mis_distance + self.dist_array_elems[self.params.signal_type])
-                    * self.array
+                    * self.virtual_array
                     * np.sin(theta)
                 )
                 + mis_geometry_noise
@@ -267,7 +271,7 @@ class SystemModel(object):
 
         theta = np.atleast_1d(theta)[:, np.newaxis]
         distance = np.atleast_1d(distance)[:, np.newaxis]
-        array = self.array[:, np.newaxis]
+        array = self.virtual_array[:, np.newaxis]
         array_square = np.power(array, 2)
         dist_array_elems = self.dist_array_elems[self.params.signal_type]
 

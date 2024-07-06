@@ -145,7 +145,7 @@ class MLE(nn.Module):
         angels = self.angles[:, None].to(device)
         distances = self.distances[:, None].to(device)
         #
-        array = torch.Tensor(self.system_model.array[:, None]).to(torch.float32).to(device)
+        array = torch.Tensor(self.system_model.virtual_array[:, None]).to(torch.float32).to(device)
         array_square = torch.pow(array, 2).to(torch.float64)
 
         first_order = torch.einsum("nm, na -> na",

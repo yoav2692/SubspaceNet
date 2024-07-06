@@ -89,6 +89,7 @@ def __run_simulation(**kwargs):
                 SystemModelParams()
                 .set_parameter("N", SYSTEM_MODEL_PARAMS["N"])
                 .set_parameter("M", SYSTEM_MODEL_PARAMS["M"])
+                .set_parameter("sensors_array_form", SYSTEM_MODEL_PARAMS["sensors_array_form"])
                 .set_parameter("T", SYSTEM_MODEL_PARAMS["T"])
                 .set_parameter("snr", snr)
                 .set_parameter("field_type", SYSTEM_MODEL_PARAMS["field_type"])
