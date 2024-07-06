@@ -501,7 +501,7 @@ def evaluate_model_based(
             # If the amount of predictions is less than the amount of sources
             # predictions = add_random_predictions(M, predictions, algorithm)
             # Calculate loss criterion
-            loss = criterion(predictions, angles)
+            loss = criterion(predictions[0], angles)
             loss_list.append(loss)
 
         # ESPRIT algorithms
@@ -520,7 +520,7 @@ def evaluate_model_based(
             if angles.shape[1] != predictions[0].shape[1]:
                 y = angles[0]
                 angles, distances = y[:len(y) // 2][None, :], y[len(y) // 2:][None, :]
-            loss = criterion(predictions, angles)
+            loss = criterion(predictions[0], angles)
             loss_list.append(loss)
 
         # MVDR algorithm

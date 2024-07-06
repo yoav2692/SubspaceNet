@@ -119,7 +119,7 @@ class RMSPELoss(nn.Module):
             self.balance_factor = nn.Parameter(torch.Tensor([BALANCE_FACTOR])).to(device).to(torch.float64)
         else:
             self.balance_factor = nn.Parameter(torch.Tensor([balance_factor])).to(device).to(torch.float64)
-        self.SORT = False
+        self.SORT = True
 
     def forward(self, doa_predictions: torch.Tensor, doa: torch.Tensor,
                 distance_predictions: torch.Tensor = None, distance: torch.Tensor = None):
@@ -150,12 +150,9 @@ class RMSPELoss(nn.Module):
         Raises:
             None
         """
-        if type(doa_predictions) == tuple:
-            num_sources = doa_predictions[0].shape[1]
-        else:
-            num_sources = doa_predictions.shape[1]
+        num_sources = doa_predictions.shape[1]
         if self.SORT:
-            doa_predictions_sorted , _ = torch.sort(doa_predictions[0],descending = False)
+            doa_predictions_sorted , _ = torch.sort(doa_predictions,descending = False)
             err_angle = (doa_predictions_sorted - doa).to(torch.float32)
             # Calculate error with modulo pi in the range [-pi/2, pi/2]
             err_angle += torch.pi / 2
