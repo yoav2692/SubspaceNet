@@ -119,7 +119,7 @@ class RMSPELoss(nn.Module):
             self.balance_factor = nn.Parameter(torch.Tensor([BALANCE_FACTOR])).to(device).to(torch.float64)
         else:
             self.balance_factor = nn.Parameter(torch.Tensor([balance_factor])).to(device).to(torch.float64)
-        self.SORT = True
+        self.SORT = False
 
     def forward(self, doa_predictions: torch.Tensor, doa: torch.Tensor,
                 distance_predictions: torch.Tensor = None, distance: torch.Tensor = None):

@@ -73,7 +73,7 @@ class Samples(SystemModel):
             """
             while True:
                 # DOA = np.round(np.random.rand(M) * 180, decimals=2) - 90
-                DOA = np.random.randint(-55, 55, M)
+                DOA = np.random.randint(-self.params.doa_range, self.params.doa_range, M)
                 DOA.sort()
                 diff_angles = np.array(
                     [np.abs(DOA[i + 1] - DOA[i]) for i in range(M - 1)]
@@ -86,7 +86,7 @@ class Samples(SystemModel):
 
         if doa == None:
             # Generate angels with gap greater than 0.2 rad (nominal case)
-            self.doa = np.array(create_doa_with_gap(gap=15, M=M)) * D2R
+            self.doa = np.array(create_doa_with_gap(gap=self.params.min_gap, M=M)) * D2R
         else:
             # Generate
             self.doa = np.array(doa) * D2R

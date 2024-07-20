@@ -97,6 +97,8 @@ def __run_simulation(**kwargs):
                 .set_parameter("eta", SYSTEM_MODEL_PARAMS["eta"])
                 .set_parameter("bias", SYSTEM_MODEL_PARAMS["bias"])
                 .set_parameter("sv_noise_var", SYSTEM_MODEL_PARAMS["sv_noise_var"])
+                .set_parameter("doa_range", SYSTEM_MODEL_PARAMS["doa_range"])
+                .set_parameter("min_gap", SYSTEM_MODEL_PARAMS["min_gap"])
             )
             system_model = SystemModel(system_model_params)
             # Generate model configuration

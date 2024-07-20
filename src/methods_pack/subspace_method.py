@@ -14,8 +14,9 @@ class SubspaceMethod(nn.Module):
     def __init__(self, system_model: SystemModel):
         super(SubspaceMethod, self).__init__()
         self.system_model = system_model
-        self.eigen_threshold_val = 0.5
+        self.eigen_threshold_val = 0.3
         self.eigen_threshold = nn.Parameter(torch.tensor(self.eigen_threshold_val), requires_grad=False)
+        nn.Sigmoid()
         self.PLOT_EV = False
         if self.PLOT_EV:
             self.colorCounter = 0
@@ -43,6 +44,11 @@ class SubspaceMethod(nn.Module):
         # number of sources estimation
         real_sorted_eigenvals = torch.gather(torch.real(eigenvalues), 1, sorted_idx)
         normalized_eigen = real_sorted_eigenvals / real_sorted_eigenvals[:, 0][:, None]
+        # torch.mean(normalized_eigen,dim=1)
+        # normalized_eigen[ii]>torch.mean(normalized_eigen,dim=1)[ii]
+        # torch.mean(normalized_eigen[0][normalized_eigen[0]>torch.mean(normalized_eigen,dim=1)[0]])
+        # torch.mean(normalized_eigen[ii][normalized_eigen[ii]<torch.mean(normalized_eigen,dim=1)[ii]])
+
         source_estimation = torch.linalg.norm(
             nn.functional.relu(
                 normalized_eigen - self.eigen_threshold * torch.ones_like(normalized_eigen)),

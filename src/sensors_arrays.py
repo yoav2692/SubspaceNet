@@ -20,8 +20,7 @@ import random
 import scipy
 
 MRA_DIFFS = {'MRA-4' : [1,3,2] ,
-'MRA-81' : [8,10,1,3,2,7,8],
-'MRA-82': [1,3,6,6,2,3,2]}
+'MRA-8': [1,3,6,6,2,3,2]}
 
 class Missing_senors_handle_method():
     DEFAULT = "phase_continuation"
@@ -108,7 +107,7 @@ class SensorsArray():
                 sensor_loc_ind = list_sensors_array_locs.index(sensor_loc)
                 phase_continuation_expansion_tensor[sensor_loc][sensor_loc_ind] = 1
             else:
-                if self.missing_sensors_handle_method == Missing_senors_handle_method.phase_continuation:
+                if 0 and self.missing_sensors_handle_method == Missing_senors_handle_method.phase_continuation:
                     diffs = self.locs - sensor_loc
                     phase_diff = diffs[np.argmin(abs(diffs))]
                     closest_sensor = self.locs[np.argmin(abs(diffs))]
