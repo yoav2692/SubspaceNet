@@ -41,7 +41,7 @@ scenario_dict = {
 
 system_model_params = {
     "N": 24 if MRA_8 else 7,                                    # number of antennas
-    "M": 7 if SANITY_CHECK else None,           # number of sources
+    "M": 18 if SANITY_CHECK else None,           # number of sources
     "sensors_array_form": ("MRA-8" if MRA_8 else "MRA-4") if SANITY_CHECK  else ("ULA-24" if MRA_8 else "ULA-7"),# "ULA-7", "MRA-4" , "MRA-8"
     "T": 100,                                   # number of snapshots
     "snr": None,                                # if defined, values in scenario_dict will be ignored
@@ -50,8 +50,8 @@ system_model_params = {
     "eta": 0,                                   # steering vector error
     "bias": 0,
     "sv_noise_var": 0,
-    "doa_range": 65,                            # doa range in degrees
-    "min_gap": 10                               # minimal gap in degrees
+    "doa_range": 75,                            # doa range in degrees
+    "min_gap": 5                               # minimal gap in degrees
 }
 model_config = {
     "model_type": "SubspaceNet",                # SubspaceNet, CascadedSubspaceNet, DeepCNN, TransMUSIC, DR_MUSIC

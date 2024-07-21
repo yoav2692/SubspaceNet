@@ -14,9 +14,10 @@ This class is used for defining the samples model.
 
 # Imports
 import numpy as np
+from random import sample 
 from src.system_model import SystemModel, SystemModelParams
 from src.utils import D2R
-
+CREATE_DOA_WITH_WHILE = 0
 class Samples(SystemModel):
     """
     Class used for defining and creating signals and observations.
@@ -71,17 +72,23 @@ class Samples(SystemModel):
                 np.ndarray: DOA array.
 
             """
-            while True:
-                # DOA = np.round(np.random.rand(M) * 180, decimals=2) - 90
-                DOA = np.random.randint(-self.params.doa_range, self.params.doa_range, M)
-                DOA.sort()
-                diff_angles = np.array(
-                    [np.abs(DOA[i + 1] - DOA[i]) for i in range(M - 1)]
-                )
-                if (np.sum(diff_angles > gap) == M - 1) and (
-                    np.sum(diff_angles < (180 - gap)) == M - 1
-                ):
-                    break
+            if CREATE_DOA_WITH_WHILE:
+                while True:
+                    # DOA = np.round(np.random.rand(M) * 180, decimals=2) - 90
+                    DOA = np.random.randint(-self.params.doa_range, self.params.doa_range, M)
+                    DOA.sort()
+                    diff_angles = np.array(
+                        [np.abs(DOA[i + 1] - DOA[i]) for i in range(M - 1)]
+                    )
+                    if (np.sum(diff_angles > gap) == M - 1) and (
+                        np.sum(diff_angles < (180 - gap)) == M - 1
+                    ):
+                        break
+            else:
+                # based on https://stackoverflow.com/questions/51918580/python-random-list-of-numbers-in-a-range-keeping-with-a-minimum-distance
+                range_size = 2 * self.params.doa_range - (gap-1) * (M-1)
+                #assert(range_size<0) , Warning(range_size<10)
+                DOA = [(gap-1)*i + x - self.params.doa_range for i, x in enumerate(sorted(sample(range(range_size), M)))] 
             return DOA
 
         if doa == None:
