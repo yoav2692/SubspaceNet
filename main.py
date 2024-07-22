@@ -32,7 +32,7 @@ os.system("cls||clear")
 plt.close("all")
 
 PIPE_CLEAN = 0
-SANITY_CHECK = 1
+SANITY_CHECK = 0
 MRA_8 = 1
 scenario_dict = {
     "coherent": [],
