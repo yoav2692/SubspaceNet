@@ -40,6 +40,7 @@ scenario_dict = {
     "non-coherent": [5],
 }
 
+
 system_model_params = {
     "N": 24 if MRA_8 else 7,                                    # number of antennas
     "M": 19 if SANITY_CHECK_NUM_SOURCES else None,           # number of sources
