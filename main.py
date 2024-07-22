@@ -32,7 +32,8 @@ os.system("cls||clear")
 plt.close("all")
 
 PIPE_CLEAN = 0
-SANITY_CHECK = 0
+SANITY_CHECK_NUM_SOURCES = 1
+SANITY_CHECK_ULA = 1
 MRA_8 = 1
 scenario_dict = {
     "coherent": [],
@@ -41,8 +42,8 @@ scenario_dict = {
 
 system_model_params = {
     "N": 24 if MRA_8 else 7,                                    # number of antennas
-    "M": 18 if SANITY_CHECK else None,           # number of sources
-    "sensors_array_form": ("MRA-8" if MRA_8 else "MRA-4") if SANITY_CHECK  else ("ULA-24" if MRA_8 else "ULA-7"),# "ULA-7", "MRA-4" , "MRA-8"
+    "M": 19 if SANITY_CHECK_NUM_SOURCES else None,           # number of sources
+    "sensors_array_form": ("ULA-24" if MRA_8 else "ULA-7") if SANITY_CHECK_ULA  else ("MRA-8" if MRA_8 else "MRA-4"),# "ULA-7", "MRA-4" , "MRA-8"
     "T": 100,                                   # number of snapshots
     "snr": None,                                # if defined, values in scenario_dict will be ignored
     "field_type": "Far",                       # Near, Far
