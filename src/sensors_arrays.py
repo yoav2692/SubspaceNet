@@ -19,8 +19,13 @@ import torch
 import random
 import scipy
 
-MRA_DIFFS = {'MRA-4' : [1,3,2] ,
-'MRA-8': [1,3,6,6,2,3,2]}
+MRA_DIFFS = {
+    'MRA-4' : [1,3,2] ,
+    'MRA-5' : [1,3,3,2] ,
+    'MRA-6' : [1,5,3,2,2] ,
+    'MRA-7' : [1,3,6,2,3,2] ,
+    'MRA-8' : [1,3,6,6,2,3,2]
+    }
 
 class Missing_senors_handle_method():
     DEFAULT = "phase_continuation"

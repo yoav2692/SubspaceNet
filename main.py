@@ -25,6 +25,7 @@ import warnings
 from src.training import *
 from run_simulation import run_simulation
 import argparse
+from src.sensors_arrays import *
 
 # Initialization
 # warnings.simplefilter("ignore")
@@ -33,27 +34,30 @@ plt.close("all")
 
 PIPE_CLEAN = 0
 SANITY_CHECK_NUM_SOURCES = 1
-SANITY_CHECK_ULA = 1
-MRA_8 = 1
+SANITY_CHECK_ULA = 0
+MRA_NUM_SENSORS = 6
 scenario_dict = {
     "coherent": [],
     "non-coherent": [5],
 }
-
-
+num_virtual_sensors = SensorsArray(f"MRA-{MRA_NUM_SENSORS}" ).last_sensor_loc
+if SANITY_CHECK_ULA:
+    sensors_array_form = f'ULA-{num_virtual_sensors}'
+else:
+    sensors_array_form = f'MRA-{MRA_NUM_SENSORS}'
 system_model_params = {
-    "N": 24 if MRA_8 else 7,                                    # number of antennas
-    "M": 19 if SANITY_CHECK_NUM_SOURCES else None,           # number of sources
-    "sensors_array_form": ("ULA-24" if MRA_8 else "ULA-7") if SANITY_CHECK_ULA  else ("MRA-8" if MRA_8 else "MRA-4"),# "ULA-7", "MRA-4" , "MRA-8"
-    "T": 100,                                   # number of snapshots
-    "snr": None,                                # if defined, values in scenario_dict will be ignored
-    "field_type": "Far",                       # Near, Far
-    "signal_nature": None,                      # if defined, values in scenario_dict will be ignored
-    "eta": 0,                                   # steering vector error
+    "M": MRA_NUM_SENSORS + 2 if SANITY_CHECK_NUM_SOURCES else None,  # number of sources
+    "N": num_virtual_sensors,                       # number of antennas
+    "sensors_array_form": sensors_array_form,       # "ULA-7", "MRA-4" , "MRA-8"
+    "T": 100,                                       # number of snapshots
+    "snr": None,                                    # if defined, values in scenario_dict will be ignored
+    "field_type": "Far",                            # Near, Far
+    "signal_nature": None,                          # if defined, values in scenario_dict will be ignored
+    "eta": 0,                                       # steering vector error
     "bias": 0,
     "sv_noise_var": 0,
-    "doa_range": 75,                            # doa range in degrees
-    "min_gap": 5                               # minimal gap in degrees
+    "doa_range": 75,                                # doa range in degrees
+    "min_gap": 5                                    # minimal gap in degrees
 }
 model_config = {
     "model_type": "SubspaceNet",                # SubspaceNet, CascadedSubspaceNet, DeepCNN, TransMUSIC, DR_MUSIC
@@ -75,7 +79,7 @@ training_params = {
     "train_test_ratio": .5,
     "training_objective": "angle",       # angle, range, source_estimation
     "batch_size": 256 if PIPE_CLEAN else 256,
-    "epochs": 10 if PIPE_CLEAN else 30,
+    "epochs": 2 if PIPE_CLEAN else 80,
     "optimizer": "Adam",                        # Adam, SGD
     "learning_rate": 0.0001,
     "weight_decay": 1e-9,
