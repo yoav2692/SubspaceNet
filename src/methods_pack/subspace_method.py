@@ -16,7 +16,9 @@ class SubspaceMethod(nn.Module):
         self.system_model = system_model
         self.eigen_threshold_val = 0.3
         self.eigen_threshold = nn.Parameter(torch.tensor(self.eigen_threshold_val), requires_grad=False)
-        nn.Sigmoid()
+        self.eigen_distribution_regularization_flag = False
+        self.ev_dist_diff_weight = 1/100
+        self.create_eigen_distribution()
         self.PLOT_EV = False
         if self.PLOT_EV:
             self.colorCounter = 0
@@ -70,6 +72,9 @@ class SubspaceMethod(nn.Module):
 
         if eigen_regularization:
             l_eig = self.eigen_regularization(normalized_eigen, number_of_sources)
+            if self.eigen_distribution_regularization_flag:
+                ev_dist_diff = self.eigen_distribution_regularization(normalized_eigen, number_of_sources)
+                l_eig += ev_dist_diff * self.ev_dist_diff_weight
         else:
             l_eig = None
 
@@ -88,8 +93,28 @@ class SubspaceMethod(nn.Module):
         l_eig = (normalized_eigenvalues[:, number_of_sources - 1] - self.eigen_threshold) * \
                 (normalized_eigenvalues[:, number_of_sources] - self.eigen_threshold)
         l_eig = torch.sum(l_eig)
-        # eigen_regularization = nn.functional.elu(eigen_regularization, alpha=1.0)
         return l_eig
+
+    def eigen_distribution_regularization(self, normalized_eigenvalues: torch.Tensor, number_of_sources: int):
+        ev_dist_diff = torch.linalg.norm(
+            normalized_eigenvalues - self.eigen_distribution,
+            dim=1, ord=2)
+        ev_dist_diff = sum(ev_dist_diff)
+        return ev_dist_diff * self.ev_dist_diff_weight
+
+    # def create_eigen_distribution(self, number_of_sources: int, descisiveness: int):
+    def create_eigen_distribution(self):
+        K = int( 3 * self.system_model.sensors_array.last_sensor_loc // 2)
+        number_of_sources = 8
+        Nv = self.system_model.sensors_array.last_sensor_loc
+        # offset = 0 #number_of_sources
+        # descisiveness = 0.5
+        # sigmoid = nn.Sigmoid()
+        # output = 1 - sigmoid( offset + descisiveness * torch.arange(-K,K))
+        # eigen_distribution = output[torch.arange(0,output.shape[0],int(output.shape[0]/self.system_model.sensors_array.last_sensor_loc))]
+        eigen_distribution = [1 - i**2/(Nv**2)  if i < number_of_sources else (Nv - 1 - i)/Nv for i in range(self.system_model.sensors_array.last_sensor_loc) ]
+        self.eigen_distribution = torch.tensor(eigen_distribution)
+        return eigen_distribution
 
     def pre_processing(self, x: torch.Tensor, mode: str = "sample"):
         if mode == "sample":

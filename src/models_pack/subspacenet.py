@@ -63,6 +63,7 @@ class SubspaceNet(nn.Module):
         self.tau = tau
         self.system_model = system_model
         self.expansion_tensor = self.system_model.sensors_array.init_expansion_tensor()
+        self.EXPANSION_USING_TENSOR = 0 # TODO remove
         if self.EXPANSION_TENSOR_LEARNING:
             self.multiply_layer = CustomMultiplyLayer(self.expansion_tensor)
         self.N = self.system_model.params.N
@@ -101,10 +102,10 @@ class SubspaceNet(nn.Module):
             Rz (torch.Tensor): Surrogate covariance matrix.
 
         """
-        if self.EXPANSION_TENSOR_LEARNING:
-            x = self.multiply_layer(x)
-        else:
-            x = torch.einsum('VA,BAS->BVS', self.expansion_tensor, x) # Vitual, Antenna, Batch, Samples
+        # if self.EXPANSION_TENSOR_LEARNING:
+        #     x = self.multiply_layer(x)
+        # else:
+        #     x = torch.einsum('VA,BAS->BVS', self.expansion_tensor, x) # Vitual, Antenna, Batch, Samples
         x = self.pre_processing(x)
         # Rx_tau shape: [Batch size, tau, 2N, N]
         self.N = x.shape[-1]
@@ -183,6 +184,11 @@ class SubspaceNet(nn.Module):
             x1 = center_x[:, :, :center_x.shape[-1] - i].to(torch.complex128)
             x2 = torch.conj(center_x[:, :, i:]).transpose(1, 2).to(torch.complex128)
             Rx_lag = torch.einsum("BNT, BTM -> BNM", x1, x2) / (center_x.shape[-1] - i - 1)
+            if self.EXPANSION_USING_TENSOR:
+                Rx_lag = torch.einsum('BNM,MV->BNV', Rx_lag,self.expansion_tensor.conj().T)
+                Rx_lag = torch.einsum('vN,BNV->BvV', self.expansion_tensor,Rx_lag)
+            else:
+                Rx_lag = self.system_model.sensors_array.expand(Rx_lag)
             Rx_lag = torch.cat((torch.real(Rx_lag), torch.imag(Rx_lag)), dim=1)
             Rx_tau[:, i, :, :] = Rx_lag
 

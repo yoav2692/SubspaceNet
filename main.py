@@ -35,7 +35,7 @@ plt.close("all")
 PIPE_CLEAN = 0
 SANITY_CHECK_NUM_SOURCES = 1
 SANITY_CHECK_ULA = 0
-MRA_NUM_SENSORS = 6
+MRA_NUM_SENSORS = 8
 scenario_dict = {
     "coherent": [],
     "non-coherent": [5],
@@ -46,7 +46,7 @@ if SANITY_CHECK_ULA:
 else:
     sensors_array_form = f'MRA-{MRA_NUM_SENSORS}'
 system_model_params = {
-    "M": MRA_NUM_SENSORS + 2 if SANITY_CHECK_NUM_SOURCES else None,  # number of sources
+    "M": MRA_NUM_SENSORS + 5 if SANITY_CHECK_NUM_SOURCES else None,  # number of sources
     "N": num_virtual_sensors,                       # number of antennas
     "sensors_array_form": sensors_array_form,       # "ULA-7", "MRA-4" , "MRA-8"
     "T": 100,                                       # number of snapshots
@@ -79,7 +79,7 @@ training_params = {
     "train_test_ratio": .5,
     "training_objective": "angle",       # angle, range, source_estimation
     "batch_size": 256 if PIPE_CLEAN else 256,
-    "epochs": 2 if PIPE_CLEAN else 80,
+    "epochs": 2 if PIPE_CLEAN else 50,
     "optimizer": "Adam",                        # Adam, SGD
     "learning_rate": 0.0001,
     "weight_decay": 1e-9,
@@ -125,7 +125,7 @@ evaluation_params = {
 }
 simulation_commands = {
     "SAVE_TO_FILE": True,
-    "CREATE_DATA": True,
+    "CREATE_DATA": False,
     "LOAD_MODEL": True,
     "TRAIN_MODEL": True,
     "SAVE_MODEL": True,

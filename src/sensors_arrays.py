@@ -123,6 +123,27 @@ class SensorsArray():
                 else: # Missing_senors_handle_method.zeros.value
                     pass
         return phase_continuation_expansion_tensor.requires_grad_(True)
+    def average_over_diff(self, mat):
+        pre_average_array = [[] for i in range(self.last_sensor_loc)] 
+        for i1,v1 in enumerate(self.locs):
+            for i2,v2 in enumerate(self.locs):
+                if i2>=i1:
+                    pre_average_array[v2-v1].append(mat[i2,i1])
+        average_array = [np.average(x) for x in pre_average_array]
+        return average_array
+
+    def expand(self, tensor):
+        ExpandMat = []
+        for tensorInd,mat in enumerate(tensor):
+            constract_diff_toepelitz = self.average_over_diff(mat.detach().numpy())
+            preExpandMat = scipy.linalg.toeplitz([0] + constract_diff_toepelitz[1:])
+            for actualInd,virtualInd in enumerate(self.locs):
+                preExpandMat[virtualInd,virtualInd] = mat[actualInd,actualInd]
+            for virtualInd in range(self.last_sensor_loc):
+                if not virtualInd in self.locs:
+                    preExpandMat[virtualInd,virtualInd] = constract_diff_toepelitz[0]
+            ExpandMat.append(preExpandMat)
+        return torch.tensor(ExpandMat,dtype=torch.complex128)
 if __name__ == "__main__":
     pass
     # y = SensorsArray("ULA-4")
