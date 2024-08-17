@@ -98,7 +98,7 @@ class SystemModel(object):
                 eta: float = 0, geo_noise_var: float = 0) -> np.ndarray: Computes the steering vector.
 
         """
-        self.sensors_array = SensorsArray(system_model_params.sensors_array_form)
+        self.sensors_array = SensorsArray(sensors_array_form = system_model_params.sensors_array_form, missing_sensors_handle_method  = system_model_params.missing_sensors_handle_method)
         self.actual_array = self.sensors_array.locs
         self.dist_array_elems = None
         self.time_axis = None

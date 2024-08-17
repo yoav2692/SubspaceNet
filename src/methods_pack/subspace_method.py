@@ -14,15 +14,19 @@ class SubspaceMethod(nn.Module):
     def __init__(self, system_model: SystemModel):
         super(SubspaceMethod, self).__init__()
         self.system_model = system_model
-        self.eigen_threshold_val = 0.3
+        self.eigen_threshold_val = 1/ np.sqrt(self.system_model.params.N)
         self.eigen_threshold = nn.Parameter(torch.tensor(self.eigen_threshold_val), requires_grad=False)
+        self.eigen_distribution_regularization_flag = True
         self.eigen_distribution_regularization_flag = False
         self.ev_dist_diff_weight = 1/100
-        self.create_eigen_distribution()
         self.PLOT_EV = False
         if self.PLOT_EV:
             self.colorCounter = 0
-            plt.figure(f"EV Distribution for {self.eigen_threshold_val}")
+            figure = plt.figure(figsize=(10, 6))
+            title = f"EV Distribution for {self.eigen_threshold_val}"
+            plt.title(title)
+            # plt.xlabel("Epochs")
+            # plt.ylabel("Accuracy")
 
     def subspace_separation(self,
                             covariance: torch.Tensor,
@@ -73,6 +77,7 @@ class SubspaceMethod(nn.Module):
         if eigen_regularization:
             l_eig = self.eigen_regularization(normalized_eigen, number_of_sources)
             if self.eigen_distribution_regularization_flag:
+                self.create_eigen_distribution()
                 ev_dist_diff = self.eigen_distribution_regularization(normalized_eigen, number_of_sources)
                 l_eig += ev_dist_diff * self.ev_dist_diff_weight
         else:
@@ -104,9 +109,9 @@ class SubspaceMethod(nn.Module):
 
     # def create_eigen_distribution(self, number_of_sources: int, descisiveness: int):
     def create_eigen_distribution(self):
-        K = int( 3 * self.system_model.sensors_array.last_sensor_loc // 2)
-        number_of_sources = 8
+        number_of_sources = self.system_model.params.M
         Nv = self.system_model.sensors_array.last_sensor_loc
+        # K = int( 3 * self.system_model.sensors_array.last_sensor_loc // 2)
         # offset = 0 #number_of_sources
         # descisiveness = 0.5
         # sigmoid = nn.Sigmoid()

@@ -112,7 +112,7 @@ class SensorsArray():
                 sensor_loc_ind = list_sensors_array_locs.index(sensor_loc)
                 phase_continuation_expansion_tensor[sensor_loc][sensor_loc_ind] = 1
             else:
-                if 0 and self.missing_sensors_handle_method == Missing_senors_handle_method.phase_continuation:
+                if self.missing_sensors_handle_method == Missing_senors_handle_method.phase_continuation:
                     diffs = self.locs - sensor_loc
                     phase_diff = diffs[np.argmin(abs(diffs))]
                     closest_sensor = self.locs[np.argmin(abs(diffs))]
@@ -123,6 +123,7 @@ class SensorsArray():
                 else: # Missing_senors_handle_method.zeros.value
                     pass
         return phase_continuation_expansion_tensor.requires_grad_(True)
+
     def average_over_diff(self, mat):
         pre_average_array = [[] for i in range(self.last_sensor_loc)] 
         for i1,v1 in enumerate(self.locs):

@@ -35,7 +35,7 @@ plt.close("all")
 PIPE_CLEAN = 0
 SANITY_CHECK_NUM_SOURCES = 1
 SANITY_CHECK_ULA = 0
-MRA_NUM_SENSORS = 8
+MRA_NUM_SENSORS = 4
 scenario_dict = {
     "coherent": [],
     "non-coherent": [5],
@@ -46,9 +46,10 @@ if SANITY_CHECK_ULA:
 else:
     sensors_array_form = f'MRA-{MRA_NUM_SENSORS}'
 system_model_params = {
-    "M": MRA_NUM_SENSORS + 5 if SANITY_CHECK_NUM_SOURCES else None,  # number of sources
+    "M": num_virtual_sensors - 1 if SANITY_CHECK_NUM_SOURCES else None,  # number of sources
     "N": num_virtual_sensors,                       # number of antennas
     "sensors_array_form": sensors_array_form,       # "ULA-7", "MRA-4" , "MRA-8"
+    "missing_sensors_handle_method": Missing_senors_handle_method.zeros ,
     "T": 100,                                       # number of snapshots
     "snr": None,                                    # if defined, values in scenario_dict will be ignored
     "field_type": "Far",                            # Near, Far
@@ -79,7 +80,7 @@ training_params = {
     "train_test_ratio": .5,
     "training_objective": "angle",       # angle, range, source_estimation
     "batch_size": 256 if PIPE_CLEAN else 256,
-    "epochs": 2 if PIPE_CLEAN else 50,
+    "epochs": 2 if PIPE_CLEAN else 100,
     "optimizer": "Adam",                        # Adam, SGD
     "learning_rate": 0.0001,
     "weight_decay": 1e-9,
@@ -162,6 +163,8 @@ if __name__ == "__main__":
         system_model_params["M"] = int(args.M)
     if args.S is not None:
         system_model_params["sensors_array_form"] = args.S
+    # if args.S_M is not None:
+    #     system_model_params["missing_sensors_handle_method"] = args.S_M   
     if args.field_type is not None:
         system_model_params["field_type"] = args.field_type
     if args.signal_nature is not None:
