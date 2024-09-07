@@ -20,6 +20,7 @@ import random
 import scipy
 
 MRA_DIFFS = {
+    'MRA-3' : [1,2] ,
     'MRA-4' : [1,3,2] ,
     'MRA-5' : [1,3,3,2] ,
     'MRA-6' : [1,5,3,2,2] ,

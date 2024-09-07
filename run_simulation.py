@@ -66,8 +66,8 @@ def __run_simulation(**kwargs):
 
             # Initialize time and date
             now = datetime.now()
-            dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-            dt_string_for_save = now.strftime("%d_%m_%Y_%H_%M")
+            dt_string = now.strftime("%m/%d/%Y %H:%M:%S")
+            dt_string_for_save = now.strftime("%m_%d_%Y_%H_%M")
             # Operations commands
 
 
@@ -273,6 +273,7 @@ def __run_simulation(**kwargs):
                     models=EVALUATION_PARAMS["models"],
                     augmented_methods=EVALUATION_PARAMS["augmented_methods"],
                     subspace_methods=EVALUATION_PARAMS["subspace_methods"],
+                    cs_methods=EVALUATION_PARAMS["cs_methods"],
                     model_tmp=model
                 )
                 plt.show()

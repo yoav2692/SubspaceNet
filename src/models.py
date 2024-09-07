@@ -260,10 +260,10 @@ class ModelGenerator(object):
             f"tau={tau}_" + \
             f"M={M}_" + \
             f"{self.system_model.params.signal_type}_" + \
-            f"SNR={self.system_model.params.snr}_" + \
             f"diff_method=esprit_" + \
             f"{self.system_model.params.field_type}_field_" +  \
             f"{self.system_model.params.signal_nature}"
+            #f"SNR={self.system_model.params.snr}_" + \
         return path
 
     def __str__(self):

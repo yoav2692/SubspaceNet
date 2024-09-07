@@ -14,7 +14,7 @@ class SubspaceMethod(nn.Module):
     def __init__(self, system_model: SystemModel):
         super(SubspaceMethod, self).__init__()
         self.system_model = system_model
-        self.eigen_threshold_val = 1/ np.sqrt(self.system_model.params.N)
+        self.eigen_threshold_val = 0.5 # 1/ np.sqrt(self.system_model.params.N)
         self.eigen_threshold = nn.Parameter(torch.tensor(self.eigen_threshold_val), requires_grad=False)
         self.eigen_distribution_regularization_flag = True
         self.eigen_distribution_regularization_flag = False

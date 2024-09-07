@@ -567,7 +567,8 @@ def train_model(training_params: TrainingParams, model_name: str, checkpoint_pat
             try:
                 train_loss.backward(retain_graph=True)
             except RuntimeError as r:
-                raise Exception(f"linalg error: \n{r}")
+                # raise Exception(f"linalg error: \n{r}")
+                continue
 
             # optimizer update
             optimizer.step()

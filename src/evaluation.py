@@ -43,6 +43,7 @@ from src.methods_pack.music import MUSIC
 from src.methods_pack.root_music import RootMusic
 from src.methods_pack.esprit import ESPRIT
 from src.methods_pack.mle import MLE
+from src.methods_pack.omp import OMP
 from src.models import (ModelGenerator, SubspaceNet, CascadedSubspaceNet, DeepAugmentedMUSIC,
                         DeepCNN, DeepRootMUSIC, TransMUSIC)
 from src.plotting import plot_spectrum
@@ -514,7 +515,7 @@ def evaluate_model_based(
             else:
                 # Conventional
                 Rx = model_based.pre_processing(x, mode="sample")
-            predictions = model_based(Rx)
+            predictions = model_based(Rx , sources_num = sources_num)
             # If the amount of predictions is less than the amount of sources
             # predictions = add_random_predictions(M, predictions, algorithm)
             # Calculate loss criterion
@@ -643,6 +644,23 @@ def evaluate_crb(dataset: list,
         print("Unrecognized field type.")
     return
 
+def evaluate_omp(dataset: list,algorithm, system_model: SystemModel, criterion):
+    # initialize mle instance
+    omp = OMP(omp_flavour=algorithm, system_model=system_model)
+    # Initialize parameters for evaluation
+    loss_list = []
+    for i, data in enumerate(dataset):
+        x, sources_num, labels, masks = data #TODO
+        x = x[:,system_model.actual_array]
+        if x.dim() == 2:
+            x = x.unsqueeze(0)
+        angles = labels.to(device)
+        # Apply OMP algorithm
+        pred_angle = omp.forward_torch(x,sources_num)
+        # Calculate loss criterion
+        loss = criterion(pred_angle.to(device), angles)
+        loss_list.append(loss.item())
+    return {"Overall": np.mean(loss_list)}
 
 def evaluate_mle(dataset: list, system_model: SystemModel, criterion):
     """
@@ -681,6 +699,7 @@ def evaluate(
         models: dict = None,
         augmented_methods: list = None,
         subspace_methods: list = None,
+        cs_methods: list = None,
         model_tmp: nn.Module = None
 ):
     """
@@ -752,6 +771,16 @@ def evaluate(
             plot_spec=plot_spec,
             algorithm=algorithm,
             figures=figures)
+        print(f"{algorithm} evaluation time: {time.time() - start}")
+        res[algorithm] = loss
+    for algorithm in cs_methods:
+        start = time.time()
+        loss = evaluate_omp(
+            dataset=generic_test_dataset,
+            algorithm=algorithm,
+            system_model=system_model,
+            criterion=criterion,
+        )
         print(f"{algorithm} evaluation time: {time.time() - start}")
         res[algorithm] = loss
     # MLE

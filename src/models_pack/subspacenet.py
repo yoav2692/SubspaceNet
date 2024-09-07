@@ -257,7 +257,26 @@ class SubspaceNet(nn.Module):
                         "distance_cell_size": self.diff_method.cell_size_distance}
 
     def get_model_name(self):
-        return f"SubspaceNet"
+        model_name = "SubspaceNet"
+        fields_for_name = [
+            'sensors_array_form',
+            'M',
+            'signal_nature',
+            'snr',
+            'missing_sensors_handle_method'
+        ]
+        for field in fields_for_name:
+            val = self.system_model.params.__getattribute__(field)
+            model_name += f"_{field}={str(val if val else 'rand')}"
+        return model_name
+    
+        # self.system_model.params.sensors_array_form
+        # self.system_model.params.M
+        # self.system_model.params.signal_nature
+        # self.system_model.params.snr
+        # self.system_model.params.missing_sensors_handle_method
+        # self.system_model.params.doa_range
+        # self.system_model.params.min_gap
 
     def get_model_params(self):
         tau = self.tau
@@ -274,10 +293,10 @@ class SubspaceNet(nn.Module):
             f"tau={self.tau}_" + \
             f"M={M}_" + \
             f"{self.system_model.params.signal_type}_" + \
-            f"SNR={self.system_model.params.snr}_" + \
             f"diff_method={self.diff_method}_" + \
             f"{self.system_model.params.field_type}_field_" + \
             f"{self.system_model.params.signal_nature}"
+            #f"SNR={self.system_model.params.snr}_" + \ signal_type, SNR, diff_method 
 
 class SubspaceNetEsprit(SubspaceNet):
     """SubspaceNet is model-based deep learning model for generalizing DOA estimation problem,

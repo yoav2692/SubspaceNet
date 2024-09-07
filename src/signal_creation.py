@@ -256,7 +256,11 @@ class Samples(SystemModel):
             Exception: If the signal nature is not defined.
         """
         M = source_number
-        amplitude = 10 ** (self.params.snr / 10)
+        if len(self.params.snr) > 1:
+            snr = np.random.uniform(self.params.snr[0],self.params.snr[1])
+        else:
+            snr = self.params.snr
+        amplitude = 10 ** (snr / 10)
         # NarrowBand signal creation
         if self.params.signal_type == "NarrowBand":
             if self.params.signal_nature == "non-coherent":

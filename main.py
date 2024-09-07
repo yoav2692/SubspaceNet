@@ -33,12 +33,13 @@ os.system("cls||clear")
 plt.close("all")
 
 PIPE_CLEAN = 0
-SANITY_CHECK_NUM_SOURCES = 1
+FULL_TRAIN = 1
+SANITY_CHECK_NUM_SOURCES = 0
 SANITY_CHECK_ULA = 0
 MRA_NUM_SENSORS = 4
 scenario_dict = {
     "coherent": [],
-    "non-coherent": [5],
+    "non-coherent": [[5,10]],
 }
 num_virtual_sensors = SensorsArray(f"MRA-{MRA_NUM_SENSORS}" ).last_sensor_loc
 if SANITY_CHECK_ULA:
@@ -49,7 +50,7 @@ system_model_params = {
     "M": num_virtual_sensors - 1 if SANITY_CHECK_NUM_SOURCES else None,  # number of sources
     "N": num_virtual_sensors,                       # number of antennas
     "sensors_array_form": sensors_array_form,       # "ULA-7", "MRA-4" , "MRA-8"
-    "missing_sensors_handle_method": Missing_senors_handle_method.zeros ,
+    "missing_sensors_handle_method": Missing_senors_handle_method.phase_continuation, # phase_continuation  ,
     "T": 100,                                       # number of snapshots
     "snr": None,                                    # if defined, values in scenario_dict will be ignored
     "field_type": "Far",                            # Near, Far
@@ -60,6 +61,27 @@ system_model_params = {
     "doa_range": 75,                                # doa range in degrees
     "min_gap": 5                                    # minimal gap in degrees
 }
+if FULL_TRAIN:
+    simulation_commands = {
+        "SAVE_TO_FILE": True,
+        "CREATE_DATA": True,
+        "LOAD_MODEL": True,
+        "TRAIN_MODEL": True,
+        "SAVE_MODEL": True,
+        "EVALUATE_MODE": True,
+        "PLOT_RESULTS": False
+    }
+else:
+    simulation_commands = {
+        "SAVE_TO_FILE": True,
+        "CREATE_DATA": False,
+        "LOAD_MODEL": True,
+        "TRAIN_MODEL": False,
+        "SAVE_MODEL": False,
+        "EVALUATE_MODE": True,
+        "PLOT_RESULTS": False
+}
+
 model_config = {
     "model_type": "SubspaceNet",                # SubspaceNet, CascadedSubspaceNet, DeepCNN, TransMUSIC, DR_MUSIC
     "model_params": {}
@@ -122,16 +144,12 @@ evaluation_params = {
         # "music_2D",
         # "sps_music_2D",
         # "CRB"
+    ],
+    "cs_methods": [
+        # "LBML",
+        # "SBL",
+        # "omp",
     ]
-}
-simulation_commands = {
-    "SAVE_TO_FILE": True,
-    "CREATE_DATA": False,
-    "LOAD_MODEL": True,
-    "TRAIN_MODEL": True,
-    "SAVE_MODEL": True,
-    "EVALUATE_MODE": True,
-    "PLOT_RESULTS": False
 }
 
 def parse_arguments():
