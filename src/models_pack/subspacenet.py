@@ -209,7 +209,7 @@ class SubspaceNet(nn.Module):
         """
         if self.field_type == "Far":
             if diff_method.startswith("root_music"):
-                self.diff_method = root_music
+                self.diff_method = RootMusic(system_model=system_model)
             elif diff_method.startswith("esprit"):
                 self.diff_method = ESPRIT(system_model=system_model)
             elif diff_method.startswith("music_1D"):
@@ -291,11 +291,11 @@ class SubspaceNet(nn.Module):
         return f"SubspaceNet_" + \
             f"N={self.N}_" + \
             f"tau={self.tau}_" + \
-            f"M={M}_" + \
-            f"{self.system_model.params.signal_type}_" + \
-            f"diff_method={self.diff_method}_" + \
-            f"{self.system_model.params.field_type}_field_" + \
-            f"{self.system_model.params.signal_nature}"
+            f"{self.system_model.params.field_type}_field"
+            # f"M={M}_" + \
+            # f"{self.system_model.params.signal_type}_" + \
+            # f"diff_method={self.diff_method}_" + \
+            # f"{self.system_model.params.signal_nature}"
             #f"SNR={self.system_model.params.snr}_" + \ signal_type, SNR, diff_method 
 
 class SubspaceNetEsprit(SubspaceNet):

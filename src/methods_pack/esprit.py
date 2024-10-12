@@ -14,6 +14,10 @@ class ESPRIT(SubspaceMethod):
             M = self.system_model.params.M
         else:
             M = sources_num
+        try:
+            M = M[0] # TODO hidden assumption M is equal per batch
+        except:
+            pass
         # get the signal subspace
         signal_subspace, _, sources_estimation, regularization = self.subspace_separation(
             cov,

@@ -17,6 +17,7 @@ def __run_simulation(**kwargs):
     EVALUATION_PARAMS = kwargs["evaluation_params"]
     scenario_dict = kwargs["scenario_dict"]
     save_to_file = SIMULATION_COMMANDS["SAVE_TO_FILE"]  # Saving results to file or present them over CMD
+    save_to_file_filePerRun = 0
     create_data = SIMULATION_COMMANDS["CREATE_DATA"]  # Creating new dataset
     load_model = SIMULATION_COMMANDS["LOAD_MODEL"]  # Load specific model for training
     train_model = SIMULATION_COMMANDS["TRAIN_MODEL"]  # Applying training operation
@@ -30,7 +31,7 @@ def __run_simulation(**kwargs):
     print("Scenrios that will be tested: ")
     M = SYSTEM_MODEL_PARAMS.get("M")
     if M is None:
-        M = "Different number of"
+        M = "Different_number_of"
     for mode, snr_list in scenario_dict.items():
         if snr_list:
             print(f"{M} {mode} sources: {snr_list}")
@@ -38,7 +39,8 @@ def __run_simulation(**kwargs):
     now = datetime.now()
     plot_path = Path(__file__).parent / "plots"
     plot_path.mkdir(parents=True, exist_ok=True)
-    dt_string_for_save = now.strftime("%d_%m_%Y_%H_%M")
+    dt_string_for_save = now.strftime("%m_%d_%Y_%H_%M")
+    summary_string_to_save = dt_string_for_save + f"_{SYSTEM_MODEL_PARAMS['sensors_array_form']}_{M}_sources_eta_{SYSTEM_MODEL_PARAMS.get('eta')}"
     # torch.set_printoptions(precision=12)
 
     res = {}
@@ -76,10 +78,13 @@ def __run_simulation(**kwargs):
             suffix = ""
             if train_model:
                 suffix += f"_train_{MODEL_CONFIG.get('model_type')}_{TRAINING_PARAMS.get('training_objective')}"
-            suffix += f"_{mode}_SNR_{snr}.txt"
-
-            if save_to_file:
-                orig_stdout = sys.stdout
+            suffix += f"_{mode}_SNR_{snr}"
+            suffix += f"_{M}_sources"
+            suffix += f"_eta_{SYSTEM_MODEL_PARAMS.get('eta')}"
+            suffix += ".txt"
+            
+            orig_stdout = sys.stdout
+            if save_to_file_filePerRun:
                 file_path = (
                         simulations_path / "results" / "scores" / Path(dt_string_for_save + suffix)
                 )
@@ -278,8 +283,8 @@ def __run_simulation(**kwargs):
                 )
                 plt.show()
                 print("end")
-                res[mode][snr] = loss
-                if save_to_file:
+                res[mode][str(snr)] = loss
+                if save_to_file_filePerRun:
                     sys.stdout.close()
                     sys.stdout = orig_stdout
     if res is not None:
@@ -465,7 +470,7 @@ def __run_simulation(**kwargs):
                             fig.show()
         if save_to_file:
             file_path = (
-                    simulations_path / "results" / "scores" / Path(dt_string_for_save +"_summary" + ".txt")
+                    simulations_path / "results" / "scores" / Path(summary_string_to_save +"_summary" + ".txt")
             )
             sys.stdout = open(file_path, "w")
         for signal_nature, snr_dict in res.items():

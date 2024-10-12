@@ -298,7 +298,7 @@ def evaluate_dnn_model(
             predictions=DOA_all * R2D,
             true_DOA=angles[0] * R2D,
             roots=roots,
-            algorithm="SubNet+R-MUSIC",
+            algorithm="SubNet+root_music",
             figures=figures,
         )
     overall_loss = {"Overall": overall_loss,
@@ -353,8 +353,8 @@ def evaluate_augmented_model(
         "mvdr": MVDR(system_model),
         "music": MUSIC(system_model, estimation_parameter="angle"),
         "esprit": ESPRIT(system_model),
-        "r-music": RootMusic(system_model),
-        "music_2D": MUSIC(system_model, estimation_parameter="angle, range")
+        "root_music": RootMusic(system_model),
+        #"music_2D": MUSIC(system_model, estimation_parameter="angle, range")
     }
     # If algorithm is not in methods
     if methods.get(algorithm) is None:
@@ -364,7 +364,7 @@ def evaluate_augmented_model(
     # Gradients calculation isn't required for evaluation
     with torch.no_grad():
         for i, data in enumerate(dataset):
-            X, true_label = data
+            X, sources_num, true_label, masks = data
             if algorithm.endswith("2D"):
                 DOA, RANGE = torch.split(true_label, true_label.size(1) // 2, dim=1)
                 RANGE.to(device)
@@ -374,9 +374,13 @@ def evaluate_augmented_model(
             # Convert observations and DoA to device
             X = X.to(device)
             DOA = DOA.to(device)
+            if X.dim() == 2:
+                X = X.unsqueeze(0)
+            X = X[:,model.actual_array]
+            model_output = model(X, sources_num=sources_num)
             # Apply method with SubspaceNet augmentation
-            method_output = methods[algorithm].narrowband(
-                X=X, mode="SubspaceNet", model=model
+            method_output = methods[algorithm].forward(
+                model_output,sources_num=sources_num
             )
             # Calculate loss, if algorithm is "music" or "esprit"
             if not algorithm.startswith("mvdr"):
@@ -423,7 +427,7 @@ def evaluate_model_based(
         system_model (SystemModel): The system model for the algorithms.
         criterion: The loss criterion for evaluation. Defaults to RMSPE.
         plot_spec (bool): Whether to plot the spectrum for the algorithms. Defaults to False.
-        algorithm (str): The algorithm to use (e.g., "music", "mvdr", "esprit", "r-music"). Defaults to "music".
+        algorithm (str): The algorithm to use (e.g., "music", "mvdr", "esprit", "root_music"). Defaults to "music".
         figures (dict): Dictionary containing figure objects for plotting. Defaults to None.
 
     Returns:
@@ -462,7 +466,7 @@ def evaluate_model_based(
         else:
             sources_num = sources_num[0]
         # Root-MUSIC algorithms
-        if algorithm.endswith("r-music"):
+        if algorithm.endswith("root_music"):
             root_music = RootMusic(system_model)
             if algorithm.startswith("sps"):
                 # Spatial smoothing
@@ -474,6 +478,7 @@ def evaluate_model_based(
                 predictions, roots, predictions_all, _, M = root_music.narrowband(
                     X=x, mode="sample"
                 )
+            predictions = model_based(Rx , sources_num = sources_num)
             # If the amount of predictions is less than the amount of sources
             predictions = add_random_predictions(M, predictions, algorithm)
             # Calculate loss criterion
@@ -507,7 +512,7 @@ def evaluate_model_based(
             loss_list.append(loss)
 
         # ESPRIT algorithms
-        elif "esprit" in algorithm:
+        elif "esprit" in algorithm or "root_music":
             # esprit = ESPRIT(system_model)
             if algorithm.startswith("sps"):
                 # Spatial smoothing
@@ -519,6 +524,8 @@ def evaluate_model_based(
             # If the amount of predictions is less than the amount of sources
             # predictions = add_random_predictions(M, predictions, algorithm)
             # Calculate loss criterion
+            if type(predictions) is not tuple:
+                pass
             if angles.shape[1] != predictions[0].shape[1]:
                 y = angles[0]
                 angles, distances = y[:len(y) // 2][None, :], y[len(y) // 2:][None, :]
@@ -740,6 +747,8 @@ def evaluate(
         # num_of_params = sum(p.numel() for p in model.parameters())
         # total_size = sum(p.numel() * p.element_size() for p in model.parameters() if p.requires_grad)
         # print(f"Number of parameters in {model_name}: {num_of_params} with total size: {total_size} bytes")
+        if str(model_name).upper() == "SUBSPACENET":
+            model_name += f"_{str(model.diff_method)}"
         start = time.time()
         model_test_loss = evaluate_dnn_model(
             model=model,

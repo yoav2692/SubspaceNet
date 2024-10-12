@@ -64,6 +64,7 @@ class SubspaceMethod(nn.Module):
             signal_subspace = sorted_eigvectors[:, :, :source_estimation]
             noise_subspace = sorted_eigvectors[:, :, source_estimation:]
         else:
+         # TODO - hidden assumption that number of sources is equal for each batch
             signal_subspace = sorted_eigvectors[:, :, :number_of_sources]
             noise_subspace = sorted_eigvectors[:, :, number_of_sources:]
         if self.PLOT_EV:

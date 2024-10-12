@@ -256,7 +256,7 @@ class Samples(SystemModel):
             Exception: If the signal nature is not defined.
         """
         M = source_number
-        if len(self.params.snr) > 1:
+        if type(self.params.snr) is not int and len(self.params.snr) > 1:
             snr = np.random.uniform(self.params.snr[0],self.params.snr[1])
         else:
             snr = self.params.snr

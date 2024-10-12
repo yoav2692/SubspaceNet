@@ -60,11 +60,11 @@ def plot_spectrum(predictions: np.ndarray, true_DOA: np.ndarray, system_model=No
     if isinstance(predictions, (np.ndarray, list, torch.Tensor)):
         predictions = np.squeeze(np.array(predictions))
     # Plot MUSIC spectrums
-    if "music" in algorithm.lower() and not ("r-music" in algorithm.lower()):
+    if "music" in algorithm.lower() and not ("root_music" in algorithm.lower()):
         plot_music_spectrum(system_model, figures, spectrum, algorithm)
     elif "mvdr" in algorithm.lower():
         plot_mvdr_spectrum(system_model, figures, spectrum, true_DOA, algorithm)
-    elif "r-music" in algorithm.lower():
+    elif "root_music" in algorithm.lower():
         plot_root_music_spectrum(roots, predictions, true_DOA, algorithm)
     else:
         raise Exception(f"evaluate_augmented_model: Algorithm {algorithm} is not supported.")
@@ -185,7 +185,7 @@ def initialize_figures():
       (dict): The figures dictionary
   """
     figures = {"music": {"fig": None, "ax": None, "norm factor": None},
-               "r-music": {"fig": None, "ax": None},
+               "root_music": {"fig": None, "ax": None},
                "esprit": {"fig": None, "ax": None},
                "mvdr": {"fig": None, "ax": None, "norm factor": None}}
     return figures
