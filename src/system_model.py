@@ -13,152 +13,62 @@ This script defines the SystemModel class for defining the settings of the DoA e
 
 # Imports
 import numpy as np
+from dataclasses import dataclass
+from src.sensors_arrays import *
 
 
+@dataclass
 class SystemModelParams:
-    """Class for setting parameters of a system model."""
+    """Class for setting parameters of a system model.
+    Initialize the SystemModelParams object.
 
-    def __init__(self):
+    Parameters:
+        None
+
+    Attributes:
+        M (int): Number of sources.
+        N (int): Number of sensors.
+        T (int): Number of observations.
+        sensors_array_form (str) : defines SensorsArray
+        signal_type (str): Signal type ("NarrowBand" or "Broadband").
+        field_type (str): field type ("Far" or "Near")
+        freq_values (list): Frequency values for Broadband signal.
+        signal_nature (str): Signal nature ("non-coherent" or "coherent").
+        snr (float): Signal-to-noise ratio.
+        eta (float): Level of deviation from sensor location.
+        bias (float): Sensors locations bias deviation.
+        sv_noise_var (float): Steering vector added noise variance.
+
+    Returns:
+        None
+    """
+
+    M = None
+    sensors_array_form = None
+    N = None
+    T = None
+    field_type = "Far"
+    signal_type = "NarrowBand"
+    freq_values = [0, 500]
+    signal_nature = "non-coherent"
+    snr = 10
+    eta = 0
+    bias = 0
+    sv_noise_var = 0
+
+    def set_parameter(self, name: str, value):
         """
-        Initialize the SystemModelParams object.
+        Set the value of the desired system model parameter.
 
-        Parameters:
-            None
-
-        Attributes:
-            M (int): Number of sources.
-            N (int): Number of sensors.
-            T (int): Number of observations.
-            signal_type (str): Signal type ("NarrowBand" or "Broadband").
-            freq_values (list): Frequency values for Broadband signal.
-            signal_nature (str): Signal nature ("non-coherent" or "coherent").
-            snr (float): Signal-to-noise ratio.
-            eta (float): Sensor location deviation.
-            sv_noise_var (float): Steering vector added noise variance.
-
-        Returns:
-            None
-        """
-        self.M = None  # Number of sources
-        self.N = None  # Number of sensors
-        self.T = None  # Number of observations
-        self.signal_type = "NarrowBand"  # Signal type ("NarrowBand" or "Broadband")
-        self.freq_values = [0, 500]  # Frequency values for Broadband signal
-        self.signal_nature = (
-            "non-coherent"  # Signal nature ("non-coherent" or "coherent")
-        )
-        self.snr = 10  # Signal-to-noise ratio
-        self.eta = 0  # Sensor location deviation
-        self.sv_noise_var = 0  # Steering vector added noise variance
-
-    def set_num_sources(self, M: int):
-        """
-        Set the number of sources.
-
-        Parameters:
-            M (int): Number of sources.
-
-        Returns:
-            SystemModelParams: The SystemModelParams object.
-        """
-        self.M = M
-        return self
-
-    def set_num_sensors(self, N: int):
-        """
-        Set the number of sensors.
-
-        Parameters:
-            N (int): Number of sensors.
+        Args:
+            name(str): the name of the SystemModelParams attribute.
+            value (int, float, optional): the desired value to assign.
 
         Returns:
             SystemModelParams: The SystemModelParams object.
         """
-        self.N = N
+        self.__setattr__(name, value)
         return self
-
-    def set_num_observations(self, T: int):
-        """
-        Set the number of observations.
-
-        Parameters:
-            T (int): Number of observations.
-
-        Returns:
-            SystemModelParams: The SystemModelParams object.
-        """
-        self.T = T
-        return self
-
-    def set_signal_type(self, signal_type: str, freq_values: list = [0, 500]):
-        """
-        Set the signal type.
-
-        Parameters:
-            signal_type (str): Signal type ("NarrowBand" or "Broadband").
-            freq_values (list, optional): Frequency values for Broadband signal.
-                Defaults to [0, 500].
-
-        Returns:
-            SystemModelParams: The SystemModelParams object.
-        """
-        self.signal_type = signal_type
-        if signal_type.startswith("Broadband"):
-            self.freq_values = freq_values
-        return self
-
-    def set_signal_nature(self, signal_nature: str):
-        """
-        Set the signal nature.
-
-        Parameters:
-            signal_nature (str): Signal nature ("non-coherent" or "coherent").
-
-        Returns:
-            SystemModelParams: The SystemModelParams object.
-        """
-        self.signal_nature = signal_nature
-        return self
-
-    def set_snr(self, snr: float):
-        """
-        Set the signal-to-noise ratio.
-
-        Parameters:
-            snr (float): Signal-to-noise ratio.
-
-        Returns:
-            SystemModelParams: The SystemModelParams object.
-        """
-        self.snr = snr
-        return self
-
-    def set_sensors_dev(self, eta: float):
-        """
-        Set the level of deviation from sensor location.
-
-        Parameters:
-            eta (float): Level of deviation from sensor location.
-
-        Returns:
-            SystemModelParams: The SystemModelParams object.
-        """
-        self.eta = eta
-        return self
-
-    def set_sv_noise(self, sv_noise_var: float):
-        """
-        Set the steering vector added noise variance.
-
-        Parameters:
-            sv_noise_var (float): Steering vector added noise variance.
-
-        Returns:
-            SystemModelParams: The SystemModelParams object.
-        """
-        self.sv_noise_var = sv_noise_var
-        return self
-
 
 
 class SystemModel(object):
@@ -167,6 +77,7 @@ class SystemModel(object):
 
         Attributes:
         -----------
+            field_type (str): Field environment approximation type. Options: "Far", "Near".
             signal_type (str): Signals type. Options: "NarrowBand", "Broadband".
             N (int): Number of sensors.
             M (int): Number of sources.
@@ -187,11 +98,21 @@ class SystemModel(object):
                 eta: float = 0, geo_noise_var: float = 0) -> np.ndarray: Computes the steering vector.
 
         """
+        self.sensors_array = SensorsArray(sensors_array_form = system_model_params.sensors_array_form, missing_sensors_handle_method  = system_model_params.missing_sensors_handle_method)
+        self.actual_array = self.sensors_array.locs
+        self.dist_array_elems = None
+        self.time_axis = None
+        self.f_sampling = None
+        self.max_freq = None
+        self.min_freq = None
+        self.f_rng = None
         self.params = system_model_params
         # Assign signal type parameters
         self.define_scenario_params()
         # Define array indices
         self.create_array()
+        # Calculation for the Fraunhofer and Fresnel
+        self.fraunhofer, self.fresnel = self.calc_fresnel_fraunhofer_distance()
 
     def define_scenario_params(self):
         """Defines the signal type parameters based on the specified frequency values."""
@@ -223,17 +144,66 @@ class SystemModel(object):
             ),
         }
         # distance between array elements
-        self.dist = {
+        self.dist_array_elems = {
             "NarrowBand": 1 / 2,
             "Broadband": 1
-            / (2 * (self.max_freq["Broadband"] - self.min_freq["Broadband"])),
+                         / (2 * (self.max_freq["Broadband"] - self.min_freq["Broadband"])),
         }
 
     def create_array(self):
-        """create an array of sensors locations"""
-        self.array = np.linspace(0, self.params.N, self.params.N, endpoint=False)
+        """create an array of sensors locations, around to origin."""
+        self.virtual_array = np.linspace(0, self.params.N, self.params.N, endpoint=False)
 
-    def steering_vec(self, theta: np.ndarray, f: float = 1, array_form="ULA"):
+    def calc_fresnel_fraunhofer_distance(self) -> tuple:
+        """
+        In the Far and Near field scenrios, those distances are relevant for the distance grid creation.
+        wavelength = 1
+        spacing = wavelength / 2
+        diemeter = (N-1) * spacing
+        Fraunhofer  = 2 * diemeter ** 2 / wavelength
+        Fresnel = 0.62 * (diemeter ** 3 / wavelength) ** 0.5
+        Returns:
+            tuple: fraunhofer(float), fresnel(float)
+        """
+        wavelength = 1
+        spacing = wavelength / 2
+        diemeter = (self.params.N - 1) * spacing
+        fraunhofer = 2 * diemeter ** 2 / wavelength
+        fresnel = 0.62 * (diemeter ** 3 / wavelength) ** 0.5
+
+        return fraunhofer, fresnel
+
+    def steering_vec(
+            self, theta: np.ndarray, distance: np.ndarray = None, f: float = 1, array_form="ULA",
+            nominal=False, generate_search_grid: bool = False) -> np.ndarray:
+        """
+        Computes the steering vector based on the specified parameters.
+        Args:
+            theta:
+            distance:
+            f:
+            array_form:
+            nominal:
+
+        Returns:
+
+        """
+        if array_form.startswith("ULA"):
+            if self.params.field_type.startswith("Far"):
+                return self.steering_vec_far_field(theta, f=f, array_form=array_form, nominal=nominal)
+            elif self.params.field_type.startswith("Near"):
+                return self.steering_vec_near_field(theta, distance=distance, f=f,
+                                                    array_form=array_form, nominal=nominal,
+                                                    generate_search_grid=generate_search_grid)
+            else:
+                raise Exception(f"SystemModel.field_type:"
+                                f" field type of approximation {self.params.field_type} is not defined")
+        else:
+            raise Exception(f"SystemModel.steering_vec: array form {array_form} is not defined")
+
+    def steering_vec_far_field(
+            self, theta: np.ndarray, f: float = 1, array_form="ULA", nominal=False
+    ):
         """Computes the steering vector based on the specified parameters.
 
         Args:
@@ -241,39 +211,90 @@ class SystemModel(object):
             theta (np.ndarray): Array of angles.
             f (float, optional): Frequency. Defaults to 1.
             array_form (str, optional): Array form. Defaults to "ULA".
+            nominal (bool): flag for creating sv without array mismatches.
 
         Returns:
         --------
             np.ndarray: Computed steering vector.
 
         """
-        sv_noise_var = self.params.sv_noise_var
         f_sv = {"NarrowBand": 1, "Broadband": f}
-        if array_form.startswith("ULA"):
-            # define uniform deviation in spacing (for each sensor)
+        # define uniform deviation in spacing (for each sensor)
+        if not nominal:
+            # Calculate uniform bias for sensors locations
+            uniform_bias = np.random.uniform(
+                low=-1 * self.params.bias, high=self.params.bias, size=1
+            )
+            # Calculate non-uniform bias for each pair of sensors
             mis_distance = np.random.uniform(
                 low=-1 * self.params.eta, high=self.params.eta, size=self.params.N
             )
-            # define noise added to steering vector
+            # Calculate additional steering vector noise
             mis_geometry_noise = np.sqrt(self.params.sv_noise_var) * (
                 np.random.randn(self.params.N)
             )
-            return (
+        # If calculation is applied through method (array mismatches are not known).
+        else:
+            mis_distance, mis_geometry_noise, uniform_bias = 0, 0, 0
+
+        return (
                 np.exp(
                     -2
                     * 1j
                     * np.pi
                     * f_sv[self.params.signal_type]
-                    * (mis_distance + self.dist[self.params.signal_type])
-                    * self.array
+                    * (uniform_bias + mis_distance + self.dist_array_elems[self.params.signal_type])
+                    * self.virtual_array
                     * np.sin(theta)
                 )
                 + mis_geometry_noise
-            )
-        else:
-            raise Exception(
-                f"SystemModel.steering_vec: array form {array_form} is not defined"
-            )
+        )
+
+    def steering_vec_near_field(self, theta: np.ndarray, distance: np.ndarray,f: float = 1, array_form="ULA",
+                                nominal=False, generate_search_grid: bool = False, known_angles: bool = False) -> np.ndarray:
+        """
+
+        Args:
+            theta:
+            distance:
+            f:
+            array_form:
+            nominal:
+
+        Returns:
+
+        """
+        f_sv = {"NarrowBand": 1, "Broadband": f}
+        # define uniform deviation in spacing (for each sensor)
+        if not nominal:
+            raise Exception("Currently support only nominal sensor array")
+
+        theta = np.atleast_1d(theta)[:, np.newaxis]
+        distance = np.atleast_1d(distance)[:, np.newaxis]
+        array = self.virtual_array[:, np.newaxis]
+        array_square = np.power(array, 2)
+        dist_array_elems = self.dist_array_elems[self.params.signal_type]
+
+        first_order = np.einsum("nm, na -> na",
+                                array,
+                                np.tile(np.sin(theta), (1, self.params.N)).T * dist_array_elems)
+        first_order = np.tile(first_order[:, :, np.newaxis], (1, 1, len(distance)))
+
+        second_order = -0.5 * np.divide(np.power(np.cos(theta) * dist_array_elems, 2), distance.T)
+        second_order = np.tile(second_order[:, :, np.newaxis], (1, 1, self.params.N))
+        second_order = np.einsum("nm, nkl -> nkl",
+                                 array_square,
+                                 np.transpose(second_order, (2, 0, 1)))
+
+        time_delay = first_order + second_order
+
+        if not generate_search_grid:
+            time_delay = np.diagonal(time_delay, axis1=1, axis2=2)
+
+        # need to divide here by the wavelength, seems that for the narrowband scenario,
+        # wavelength = 1.
+        return np.exp(2 * -1j * np.pi * time_delay)
+
 
     def __str__(self):
         """Returns a string representation of the SystemModel object.

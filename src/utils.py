@@ -23,14 +23,17 @@ This script defines some helpful functions:
 # Imports
 import numpy as np
 import torch
+torch.cuda.empty_cache()
 import random
 import scipy
+import warnings
 
 # Constants
 R2D = 180 / np.pi
 D2R = 1 / R2D
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+# device = "cpu"
+print("Running on device: ", device)
 
 # Functions
 # def sum_of_diag(matrix: np.ndarray) -> list:
@@ -169,7 +172,14 @@ def set_unified_seed(seed: int = 42):
     """
     random.seed(seed)
     np.random.seed(seed)
-    torch.manual_seed(seed)
+    torch.manual_seed(0)
+    torch.cuda.manual_seed_all(0)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    if torch.cuda.is_available():
+        torch.use_deterministic_algorithms(False)
+    else:
+        torch.use_deterministic_algorithms(True)
 
 
 # def get_k_angles(grid_size: float, k: int, prediction: torch.Tensor) -> torch.Tensor:
@@ -265,18 +275,57 @@ def gram_diagonal_overload(Kx: torch.Tensor, eps: float, batch_size: int):
     if not isinstance(Kx, torch.Tensor):
         Kx = torch.tensor(Kx)
 
-    Kx_list = []
-    bs_kx = Kx
-    for iter in range(batch_size):
-        K = bs_kx[iter]
-        # Hermitian conjecture
-        Kx_garm = torch.matmul(torch.t(torch.conj(K)), K).to(device)
-        # Diagonal loading
-        eps_addition = (eps * torch.diag(torch.ones(Kx_garm.shape[0]))).to(device)
-        Rz = Kx_garm + eps_addition
-        Kx_list.append(Rz)
-    Kx_Out = torch.stack(Kx_list, dim=0)
+    Kx_garm = torch.matmul(torch.transpose(Kx.conj(), 1, 2).to("cpu"), Kx.to("cpu")).to(device)
+    eps_addition = (eps * torch.diag(torch.ones(Kx_garm.shape[-1]))).to(device)
+    Kx_Out = Kx_garm + eps_addition
     return Kx_Out
+
+
+def calculate_covariance_tensor(sampels: torch.Tensor, method: str = "simple"):
+    if method in ["simple", "sample"]:
+        if sampels.dim() == 2:
+            Rx = torch.cov(sampels)[None, :, :]
+        elif sampels.dim() == 3:
+            Rx = torch.stack([torch.cov(sampels[i, :, :]) for i in range(sampels.shape[0])])
+
+    elif method == "sps":
+        Rx = _spatial_smoothing_covariance(sampels)[None, :, :]
+    else:
+        raise ValueError(f"calculate_covariance_tensor: method {method} is not recognized for covariance calculation.")
+
+    return Rx
+
+
+def _spatial_smoothing_covariance(sampels: torch.Tensor):
+    """
+    Calculates the covariance matrix using spatial smoothing technique.
+
+    Args:
+    -----
+        X (np.ndarray): Input samples matrix.
+
+    Returns:
+    --------
+        covariance_mat (np.ndarray): Covariance matrix.
+    """
+    X = sampels.squeeze()
+    N = X.shape[0]
+    # Define the sub-arrays size
+    sub_array_size = int(N / 2) + 1
+    # Define the number of sub-arrays
+    number_of_sub_arrays = N - sub_array_size + 1
+    # Initialize covariance matrix
+    covariance_mat = torch.zeros((sub_array_size, sub_array_size), dtype=torch.complex128)
+
+    for j in range(number_of_sub_arrays):
+        # Run over all sub-arrays
+        x_sub = X[j: j + sub_array_size, :]
+        # Calculate sample covariance matrix for each sub-array
+        sub_covariance = torch.cov(x_sub)
+        # Aggregate sub-arrays covariances
+        covariance_mat += sub_covariance / number_of_sub_arrays
+    # Divide overall matrix by the number of sources
+    return covariance_mat
 
 
 if __name__ == "__main__":

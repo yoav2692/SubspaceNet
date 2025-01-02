@@ -14,10 +14,10 @@ This class is used for defining the samples model.
 
 # Imports
 import numpy as np
+from random import sample 
 from src.system_model import SystemModel, SystemModelParams
 from src.utils import D2R
-
-
+CREATE_DOA_WITH_WHILE = 0
 class Samples(SystemModel):
     """
     Class used for defining and creating signals and observations.
@@ -48,8 +48,9 @@ class Samples(SystemModel):
 
         """
         super().__init__(system_model_params)
+        self.distances = None
 
-    def set_doa(self, doa):
+    def set_doa(self, doa, M):
         """
         Sets the direction of arrival (DOA) for the signals.
 
@@ -59,7 +60,7 @@ class Samples(SystemModel):
 
         """
 
-        def create_doa_with_gap(gap: float):
+        def create_doa_with_gap(gap: float, M):
             """Create angles with a value gap.
 
             Args:
@@ -71,25 +72,64 @@ class Samples(SystemModel):
                 np.ndarray: DOA array.
 
             """
-            M = self.params.M
-            while True:
-                DOA = np.round(np.random.rand(M) * 180, decimals=2) - 90
-                DOA.sort()
-                diff_angles = np.array(
-                    [np.abs(DOA[i + 1] - DOA[i]) for i in range(M - 1)]
-                )
-                if (np.sum(diff_angles > gap) == M - 1) and (
-                    np.sum(diff_angles < (180 - gap)) == M - 1
-                ):
-                    break
+            if CREATE_DOA_WITH_WHILE:
+                while True:
+                    # DOA = np.round(np.random.rand(M) * 180, decimals=2) - 90
+                    DOA = np.random.randint(-self.params.doa_range, self.params.doa_range, M)
+                    DOA.sort()
+                    diff_angles = np.array(
+                        [np.abs(DOA[i + 1] - DOA[i]) for i in range(M - 1)]
+                    )
+                    if (np.sum(diff_angles > gap) == M - 1) and (
+                        np.sum(diff_angles < (180 - gap)) == M - 1
+                    ):
+                        break
+            else:
+                # based on https://stackoverflow.com/questions/51918580/python-random-list-of-numbers-in-a-range-keeping-with-a-minimum-distance
+                range_size = 2 * self.params.doa_range - (gap-1) * (M-1)
+                #assert(range_size<0) , Warning(range_size<10)
+                DOA = [(gap-1)*i + x - self.params.doa_range for i, x in enumerate(sorted(sample(range(range_size), M)))] 
             return DOA
 
         if doa == None:
             # Generate angels with gap greater than 0.2 rad (nominal case)
-            self.doa = np.array(create_doa_with_gap(gap=15)) * D2R
+            self.doa = np.array(create_doa_with_gap(gap=self.params.min_gap, M=M)) * D2R
         else:
             # Generate
             self.doa = np.array(doa) * D2R
+
+    def set_range(self, distance: list | np.ndarray, M) -> np.ndarray:
+        """
+
+        Args:
+            distance:
+
+        Returns:
+
+        """
+
+        def choose_distances(M, distance_min_gap: float = 0.5, distance_max_gap: int = 10,
+                             min_val: float = 2, max_val: int = 7) -> np.ndarray:
+
+            distances = np.zeros(M)
+            idx = 0
+            while idx < M:
+                distance = np.round(np.random.uniform(min_val, max_val), decimals=0)
+                if len(distances) == 0:
+                    distances[idx] = distance
+                    idx += 1
+                else:
+                    if np.min(np.abs(np.array(distances) - distance)) >= distance_min_gap and \
+                            np.max(np.abs(np.array(distances) - distance)) <= distance_max_gap:
+                        distances[idx] = distance
+                        idx += 1
+            return distances
+
+        if distance is None:
+            self.distances = choose_distances(M, min_val=self.fresnel, max_val=self.fraunhofer*0.4,
+                                              distance_min_gap=0.5, distance_max_gap=self.fraunhofer)
+        else:
+            self.distances = distance
 
     def samples_creation(
         self,
@@ -97,6 +137,7 @@ class Samples(SystemModel):
         noise_variance: float = 1,
         signal_mean: float = 0,
         signal_variance: float = 1,
+        source_number: int = None,
     ):
         """Creates samples based on the specified mode and parameters.
 
@@ -117,13 +158,19 @@ class Samples(SystemModel):
 
         """
         # Generate signal matrix
-        signal = self.signal_creation(signal_mean, signal_variance)
+        signal = self.signal_creation(signal_mean, signal_variance, source_number=source_number)
         # Generate noise matrix
         noise = self.noise_creation(noise_mean, noise_variance)
         # Generate Narrowband samples
         if self.params.signal_type.startswith("NarrowBand"):
-            A = np.array([self.steering_vec(theta) for theta in self.doa]).T
-            samples = (A @ signal) + noise
+            if self.params.field_type.startswith("Far"):
+                A = np.array([self.steering_vec(theta) for theta in self.doa]).T
+                samples = (A @ signal) + noise
+            elif self.params.field_type.startswith("Near"):
+                A = self.steering_vec(theta=self.doa, distance=self.distances, nominal=True, generate_search_grid=False)
+                samples = (A @ signal) + noise
+            else:
+                raise Exception(f"Samples.params.field_type: Field type {self.params.field_type} is not defined")
             return samples, signal, A, noise
         # Generate Broadband samples
         elif self.params.signal_type.startswith("Broadband"):
@@ -190,7 +237,7 @@ class Samples(SystemModel):
                 f"Samples.noise_creation: signal type {self.params.signal_type} is not defined"
             )
 
-    def signal_creation(self, signal_mean: float = 0, signal_variance: float = 1):
+    def signal_creation(self, signal_mean: float = 0, signal_variance: float = 1, source_number: int = None):
         """
         Creates signals based on the specified signal nature and parameters.
 
@@ -208,7 +255,12 @@ class Samples(SystemModel):
             Exception: If the signal type is not defined.
             Exception: If the signal nature is not defined.
         """
-        amplitude = 10 ** (self.params.snr / 10)
+        M = source_number
+        if type(self.params.snr) is not int and len(self.params.snr) > 1:
+            snr = np.random.uniform(self.params.snr[0],self.params.snr[1])
+        else:
+            snr = self.params.snr
+        amplitude = 10 ** (snr / 10)
         # NarrowBand signal creation
         if self.params.signal_type == "NarrowBand":
             if self.params.signal_nature == "non-coherent":
@@ -218,8 +270,8 @@ class Samples(SystemModel):
                     * (np.sqrt(2) / 2)
                     * np.sqrt(signal_variance)
                     * (
-                        np.random.randn(self.params.M, self.params.T)
-                        + 1j * np.random.randn(self.params.M, self.params.T)
+                        np.random.randn(M, self.params.T)
+                        + 1j * np.random.randn(M, self.params.T)
                     )
                     + signal_mean
                 )
@@ -236,7 +288,7 @@ class Samples(SystemModel):
                     )
                     + signal_mean
                 )
-                return np.repeat(sig, self.params.M, axis=0)
+                return np.repeat(sig, M, axis=0)
 
         # OFDM Broadband signal creation
         elif self.params.signal_type.startswith("Broadband"):

@@ -50,7 +50,6 @@ Methods:
 # Imports
 import numpy as np
 import scipy
-import torch
 from src.models import SubspaceNet
 from src.system_model import SystemModel
 from src.utils import sum_of_diag, find_roots, R2D
@@ -102,7 +101,7 @@ class SubspaceMethod(object):
         --------
             covariance_mat (np.ndarray): Covariance matrix.
 
-        Raises:
+        Raises:narrowband
         -------
             Exception: If the given model for covariance calculation is not from SubspaceNet type.
             Exception: If the covariance calculation mode is not defined.
@@ -244,7 +243,7 @@ class MUSIC(SubspaceMethod):
         """
         super().__init__(system_model)
         # angle axis for representation of the MUSIC spectrum
-        self._angels = np.linspace(-1 * np.pi / 2, np.pi / 2, 360, endpoint=False)
+        self._angels = np.linspace(-1 * np.pi / 2, np.pi / 2, 18000, endpoint=False)
 
     def spectrum_calculation(
         self, Un: np.ndarray, f: float = 1, array_form: str = "ULA"
@@ -268,7 +267,7 @@ class MUSIC(SubspaceMethod):
         # Run over all angels in grid
         for angle in self._angels:
             # Calculate the steered vector to angle
-            a = self.system_model.steering_vec(theta=angle, f=f, array_form=array_form)[
+            a = self.system_model.steering_vec(theta=angle, f=f, array_form=array_form, nominal = True)[
                 : Un.shape[0]
             ]
             # Calculate the core equation element
@@ -640,8 +639,8 @@ class MVDR(MUSIC):
         for angle in self._angels:
             # Calculate the steering vector
             a = self.system_model.steering_vec(
-                theta=angle, f=f, array_form="ULA"
-            ).reshape((self.system_model.params.N, 1))
+                theta=angle, f=f, array_form="ULA",
+                nominal=True).reshape((self.system_model.params.N, 1))
             # Adaptive calculation of optimal_weights
             optimal_weights = (inv_covariance @ a) / (np.conj(a).T @ inv_covariance @ a)
             # Calculate beamformer gain at specific angle

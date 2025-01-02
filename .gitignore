@@ -1,8 +1,12 @@
-# git ignore files
-*.pdf
-Figures/*.pdf
-__pycache__/*.pyc
-plot_style.txt
-plotting
-Figures
-src/__pycache__
+.idea/
+*.txt
+*.ini
+__pycache__/
+.venv*/
+data/
+src/__pycache__/
+*.py
+!main.py
+!run_simulation.py
+!/src/*.py
+*/
