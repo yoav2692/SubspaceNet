@@ -112,13 +112,7 @@ class SubspaceMethod(nn.Module):
     def create_eigen_distribution(self):
         number_of_sources = self.system_model.params.M
         Nv = self.system_model.sensors_array.last_sensor_loc
-        # K = int( 3 * self.system_model.sensors_array.last_sensor_loc // 2)
-        # offset = 0 #number_of_sources
-        # descisiveness = 0.5
-        # sigmoid = nn.Sigmoid()
-        # output = 1 - sigmoid( offset + descisiveness * torch.arange(-K,K))
-        # eigen_distribution = output[torch.arange(0,output.shape[0],int(output.shape[0]/self.system_model.sensors_array.last_sensor_loc))]
-        eigen_distribution = [1 - i**2/(Nv**2)  if i < number_of_sources else (Nv - 1 - i)/Nv for i in range(self.system_model.sensors_array.last_sensor_loc) ]
+        eigen_distribution = [1 - i**2/(number_of_sources**2)  if i < number_of_sources else (Nv - 1 - i)/((Nv-1)*{number_of_sources-1})*Nv**(-0.5) for i in range(self.system_model.sensors_array.last_sensor_loc) ]
         self.eigen_distribution = torch.tensor(eigen_distribution)
         return eigen_distribution
 
